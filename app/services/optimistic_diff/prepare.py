@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 import logging
 from asyncio import TaskGroup
 from collections import defaultdict
@@ -467,7 +468,7 @@ class OptimisticDiffPrepare:
         changeset_id = next(iter(changeset_ids))
 
         with options_context(joinedload(Changeset.user).load_only(User.roles)):
-            self.changeset = changeset = await ChangesetQuery.find_by_id(changeset_id)
+            self.changeset = changeset = await Session.execute(ChangesetQuery.find_by_id(changeset_id)).scalar_one_or_none()
 
         if changeset is None:
             raise_for().changeset_not_found(changeset_id)

@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from datetime import timedelta
 
 import pytest
@@ -27,5 +28,5 @@ async def test_delete_old_pending_users(status: UserStatus, should_delete: bool)
         await TestService.create_user(display_name, status=status, created_at=created_at)
 
     await UserService.delete_old_pending_users()
-    user = await UserQuery.find_one_by_display_name(display_name)
+    user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
     assert (user is None) == should_delete

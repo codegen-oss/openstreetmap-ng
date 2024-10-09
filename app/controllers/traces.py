@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from asyncio import TaskGroup
 from typing import Annotated
 
@@ -125,7 +126,7 @@ async def personal(
     after: Annotated[int | None, Query(gt=0)] = None,
     before: Annotated[int | None, Query(gt=0)] = None,
 ):
-    user = await UserQuery.find_one_by_display_name(display_name)
+    user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
     data = await _get_traces_data(user=user, tag=None, after=after, before=before)
     return render_response('traces/index.jinja2', data)
 
@@ -137,7 +138,7 @@ async def personal_tagged(
     after: Annotated[int | None, Query(gt=0)] = None,
     before: Annotated[int | None, Query(gt=0)] = None,
 ):
-    user = await UserQuery.find_one_by_display_name(display_name)
+    user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
     data = await _get_traces_data(user=user, tag=tag, after=after, before=before)
     return render_response('traces/index.jinja2', data)
 

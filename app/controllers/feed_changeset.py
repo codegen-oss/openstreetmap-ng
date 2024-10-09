@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, Response
@@ -38,7 +39,7 @@ async def user_history_feed(
     bbox: Annotated[str | None, Query(min_length=1)] = None,
     limit: Annotated[int, Query(gt=0, le=CHANGESET_QUERY_MAX_LIMIT)] = CHANGESET_QUERY_DEFAULT_LIMIT,
 ):
-    user = await UserQuery.find_one_by_display_name(display_name=display_name)
+    user = await Session.execute(UserQuery.find_one_by_display_name(display_name=display_name)).scalar_one_or_none()
     if user is None:
         return Response(None, status.HTTP_404_NOT_FOUND, media_type='application/atom+xml')
     geometry = parse_bbox(bbox) if (bbox is not None) else None
@@ -65,13 +66,13 @@ async def _get_feed(
     limit: int,
 ):
     with options_context(joinedload(Changeset.user).load_only(User.display_name), raiseload(Changeset.bounds)):
-        changesets = await ChangesetQuery.find_many_by_query(
+        changesets = await Session.execute(ChangesetQuery.find_many_by_query(
             user_id=user.id if (user is not None) else None,
             geometry=geometry,
             legacy_geometry=True,
             sort='desc',
             limit=limit,
-        )
+        ))
 
     request_url = str(get_request().url)
     html_url = request_url.replace('/feed', '')

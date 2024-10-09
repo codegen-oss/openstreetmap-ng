@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from collections.abc import Iterable
 from copy import deepcopy
 from functools import cache
@@ -55,7 +56,7 @@ async def changeset_id(client: AsyncClient):
     )
     assert r.is_success, r.text
 
-    user = await UserQuery.find_one_by_display_name('user1')
+    user = await Session.execute(UserQuery.find_one_by_display_name('user1')).scalar_one_or_none()
     with exceptions_context(Exceptions06()), auth_context(user, ()):
         yield int(r.text)
 
