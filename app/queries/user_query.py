@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Sequence
 
@@ -94,12 +95,12 @@ class UserQuery:
                 return True
 
             # check if the name is available
-            other_user = await UserQuery.find_one_by_display_name(display_name)
+            other_user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
             return other_user is None or other_user.id == user.id
 
         else:
             # check if the name is available
-            other_user = await UserQuery.find_one_by_display_name(display_name)
+            other_user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
             return other_user is None
 
     @staticmethod

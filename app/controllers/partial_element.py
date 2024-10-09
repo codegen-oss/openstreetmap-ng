@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from asyncio import TaskGroup
 from collections.abc import Collection, Iterable
 from itertools import chain
@@ -190,7 +191,7 @@ async def _get_element_data(element: Element, at_sequence_id: int, *, include_pa
                 User.avatar_id,
             )
         ):
-            changeset = await ChangesetQuery.find_by_id(element.changeset_id)
+            changeset = await Session.execute(ChangesetQuery.find_by_id(element.changeset_id)).scalar_one_or_none()
             if changeset is None:
                 raise AssertionError('Parent changeset must exist')
             return changeset

@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 import logging
 from base64 import b64decode
 
@@ -97,7 +98,7 @@ class AuthService:
                 scheme, _, param = authorization.partition(' ')
                 if scheme == 'User':
                     logging.debug('Attempting to authenticate with User')
-                    user = await UserQuery.find_one_by_display_name(param)
+                    user = await Session.execute(UserQuery.find_one_by_display_name(param)).scalar_one_or_none()
                     scopes = _session_auth_scopes
                     if user is None:
                         raise_for().user_not_found(param)
@@ -125,7 +126,7 @@ class AuthService:
                 user = None
         else:
             display_name = display_name_or_email
-            user = await UserQuery.find_one_by_display_name(display_name)
+            user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
 
         if user is None:
             logging.debug('User not found %r', display_name_or_email)

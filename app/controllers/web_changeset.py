@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from typing import Annotated
 
 from fastapi import APIRouter, Form, Query, Response
@@ -60,11 +61,11 @@ async def get_map(
             User.avatar_id,
         )
     ):
-        changesets = await ChangesetQuery.find_many_by_query(
+        changesets = await Session.execute(ChangesetQuery.find_many_by_query(
             changeset_id_before=before,
             geometry=geometry,
             sort='desc',
             limit=CHANGESET_QUERY_WEB_LIMIT,
-        )
+        ))
     await ChangesetCommentQuery.resolve_num_comments(changesets)
     return FormatLeaflet.encode_changesets(changesets)

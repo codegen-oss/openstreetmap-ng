@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from asyncio import TaskGroup
 
 from fastapi import APIRouter
@@ -32,7 +33,7 @@ async def get_changeset(id: PositiveInt):
             User.avatar_id,
         )
     ):
-        changeset = await ChangesetQuery.find_by_id(id)
+        changeset = await Session.execute(ChangesetQuery.find_by_id(id)).scalar_one_or_none()
 
     if changeset is None:
         return render_response(
@@ -44,7 +45,7 @@ async def get_changeset(id: PositiveInt):
     next_changeset_id: int | None = None
 
     async def elements_task():
-        elements_ = await ElementQuery.get_by_changeset(id, sort_by='id')
+        elements_ = await Session.execute(ElementQuery.get_by_changeset(id, sort_by='id')).scalars().all()
         return await FormatElementList.changeset_elements(elements_)
 
     async def comments_task():

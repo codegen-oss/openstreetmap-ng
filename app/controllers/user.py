@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from datetime import UTC, datetime, timedelta
 from itertools import cycle
 from typing import Annotated
@@ -39,7 +40,7 @@ router = APIRouter()
 # TODO: optimize
 @router.get('/user/{display_name:str}')
 async def index(display_name: Annotated[str, Path(min_length=1, max_length=DISPLAY_NAME_MAX_LENGTH)]):
-    user = await UserQuery.find_one_by_display_name(display_name)
+    user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
 
     if user is None:
         res = render_response('user/profile/not_found.jinja2', {'name': display_name})
@@ -56,11 +57,11 @@ async def index(display_name: Annotated[str, Path(min_length=1, max_length=DISPL
 
     changesets_count = await ChangesetQuery.count_by_user_id(user.id)
     changeset_comments_count = 0  # TODO:
-    changesets = await ChangesetQuery.find_many_by_query(
+    changesets = await Session.execute(ChangesetQuery.find_many_by_query(
         user_id=user.id,
         sort='desc',
         limit=USER_RECENT_ACTIVITY_ENTRIES,
-    )
+    ))
     await ChangesetCommentQuery.resolve_num_comments(changesets)
 
     notes_count = await NoteQuery.count_by_user_id(user.id)

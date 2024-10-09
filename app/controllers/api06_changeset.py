@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from collections.abc import Sequence
 from typing import Annotated, Literal
 
@@ -53,7 +54,7 @@ async def get_changeset(
     include_discussion: Annotated[str | None, Query(alias='include_discussion')] = None,
 ):
     with options_context(joinedload(Changeset.user).load_only(User.display_name)):
-        changeset = await ChangesetQuery.find_by_id(changeset_id)
+        changeset = await Session.execute(ChangesetQuery.find_by_id(changeset_id)).scalar_one_or_none()
     if changeset is None:
         raise_for().changeset_not_found(changeset_id)
     changesets = (changeset,)
@@ -73,11 +74,11 @@ async def download_changeset(
     changeset_id: PositiveInt,
 ):
     with options_context(joinedload(Changeset.user).load_only(User.display_name)):
-        changeset = await ChangesetQuery.find_by_id(changeset_id)
+        changeset = await Session.execute(ChangesetQuery.find_by_id(changeset_id)).scalar_one_or_none()
     if changeset is None:
         raise_for().changeset_not_found(changeset_id)
 
-    elements = await ElementQuery.get_by_changeset(changeset_id, sort_by='sequence_id')
+    elements = await Session.execute(ElementQuery.get_by_changeset(changeset_id, sort_by='sequence_id')).scalars().all()
     await UserQuery.resolve_elements_users(elements, display_name=True)
     return Format06.encode_osmchange(elements)
 
@@ -95,7 +96,7 @@ async def update_changeset(
 
     await ChangesetService.update_tags(changeset_id, tags)
     with options_context(joinedload(Changeset.user).load_only(User.display_name)):
-        changeset = await ChangesetQuery.find_by_id(changeset_id)
+        changeset = await Session.execute(ChangesetQuery.find_by_id(changeset_id)).scalar_one_or_none()
     if changeset is None:
         raise AssertionError(f'Changeset {changeset_id} must exist in database')
     changesets = (changeset,)
@@ -167,7 +168,7 @@ async def query_changesets(
     if display_name is not None and user_id is not None:
         return Response('provide either the user ID or display name, but not both', status.HTTP_400_BAD_REQUEST)
     if display_name is not None:
-        user = await UserQuery.find_one_by_display_name(display_name)
+        user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
         if user is None:
             raise_for().user_not_found_bad_request(display_name)
     elif user_id is not None:
@@ -193,7 +194,7 @@ async def query_changesets(
         created_before = None
 
     with options_context(joinedload(Changeset.user).load_only(User.display_name), raiseload(Changeset.bounds)):
-        changesets = await ChangesetQuery.find_many_by_query(
+        changesets = await Session.execute(ChangesetQuery.find_many_by_query(
             changeset_ids=changeset_ids,
             user_id=user.id if (user is not None) else None,
             created_before=created_before,
@@ -203,7 +204,7 @@ async def query_changesets(
             legacy_geometry=True,
             sort='asc' if (order == 'newest') else 'desc',
             limit=limit,
-        )
+        ))
 
     await ChangesetCommentQuery.resolve_num_comments(changesets)
     return Format06.encode_changesets(changesets)

@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from typing import Annotated
 
 from fastapi import APIRouter, Form
@@ -57,7 +58,7 @@ async def changeset_unsubscribe(
 
 async def _get_response(changeset_id: int):
     with options_context(joinedload(Changeset.user).load_only(User.display_name)):
-        changeset = await ChangesetQuery.find_by_id(changeset_id)
+        changeset = await Session.execute(ChangesetQuery.find_by_id(changeset_id)).scalar_one_or_none()
     if changeset is None:
         raise AssertionError(f'Changeset {changeset_id} must exist in database')
     changesets = (changeset,)

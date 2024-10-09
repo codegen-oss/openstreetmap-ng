@@ -1,3 +1,4 @@
+from sqlalchemy.orm import Session
 from asyncio import TaskGroup
 from collections import defaultdict
 from collections.abc import Sequence
@@ -277,7 +278,7 @@ async def query_notes2(
         return Format06.encode_notes(())
 
     if display_name is not None:
-        user = await UserQuery.find_one_by_display_name(display_name)
+        user = await Session.execute(UserQuery.find_one_by_display_name(display_name)).scalar_one_or_none()
         if user is None:
             raise_for().user_not_found_bad_request(display_name)
     elif user_id is not None:
