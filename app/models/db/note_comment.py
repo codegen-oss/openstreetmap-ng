@@ -1,7 +1,7 @@
 import enum
 from ipaddress import IPv4Address, IPv6Address
 
-from sqlalchemy import Computed, Enum, ForeignKey, LargeBinary, UnicodeText
+from sqlalchemy import Computed, Enum, ForeignKey, LargeBinary, StringText
 from sqlalchemy.dialects.postgresql import INET, TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
@@ -32,7 +32,7 @@ class NoteComment(Base.Sequential, CreatedAtMixin, RichTextMixin):
     user_ip: Mapped[IPv4Address | IPv6Address | None] = mapped_column(INET, nullable=True)
     note_id: Mapped[int] = mapped_column(ForeignKey(Note.id), nullable=False)
     event: Mapped[NoteEvent] = mapped_column(Enum(NoteEvent), nullable=False)
-    body: Mapped[str] = mapped_column(UnicodeText, nullable=False)
+    body: Mapped[str] = mapped_column(StringText, nullable=False)
     body_rich_hash: Mapped[bytes | None] = mapped_column(
         LargeBinary(HASH_SIZE),
         init=False,

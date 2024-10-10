@@ -3,7 +3,7 @@ from typing import Self
 
 import cython
 from bs4 import BeautifulSoup
-from sqlalchemy import Boolean, ForeignKey, LargeBinary, UnicodeText
+from sqlalchemy import Boolean, ForeignKey, LargeBinary, StringText
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.lib.crypto import HASH_SIZE
@@ -22,8 +22,8 @@ class Message(Base.ZID, CreatedAtMixin, RichTextMixin):
     from_user: Mapped[User] = relationship(foreign_keys=(from_user_id,), init=False, lazy='raise', innerjoin=True)
     to_user_id: Mapped[int] = mapped_column(ForeignKey(User.id), nullable=False)
     to_user: Mapped[User] = relationship(foreign_keys=(to_user_id,), init=False, lazy='raise', innerjoin=True)
-    subject: Mapped[str] = mapped_column(UnicodeText, nullable=False)
-    body: Mapped[str] = mapped_column(UnicodeText, nullable=False)
+    subject: Mapped[str] = mapped_column(StringText, nullable=False)
+    body: Mapped[str] = mapped_column(StringText, nullable=False)
     body_rich_hash: Mapped[bytes | None] = mapped_column(
         LargeBinary(HASH_SIZE),
         init=False,

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, ColumnElement, ForeignKey, LargeBinary, UnicodeText, and_, func, null, true
+from sqlalchemy import Boolean, ColumnElement, ForeignKey, LargeBinary, StringText, and_, func, null, true
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
@@ -25,7 +25,7 @@ class UserBlock(Base.Sequential, CreatedAtMixin, UpdatedAtMixin, RichTextMixin):
     to_user: Mapped[User] = relationship(foreign_keys=(to_user_id,), lazy='raise', innerjoin=True)
     expires_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(True), nullable=True)
     acknowledged: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    body: Mapped[str] = mapped_column(UnicodeText, nullable=False)
+    body: Mapped[str] = mapped_column(StringText, nullable=False)
     body_rich_hash: Mapped[bytes | None] = mapped_column(
         LargeBinary(HASH_SIZE),
         init=False,

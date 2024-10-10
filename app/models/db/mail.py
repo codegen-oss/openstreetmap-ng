@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import Enum, ForeignKey, Index, SmallInteger, UnicodeText
+from sqlalchemy import Enum, ForeignKey, Index, SmallInteger, StringText
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,9 +24,9 @@ class Mail(Base.ZID, CreatedAtMixin):
     from_user: Mapped[User | None] = relationship(foreign_keys=(from_user_id,), init=False, lazy='raise')
     to_user_id: Mapped[int] = mapped_column(ForeignKey(User.id), nullable=False)
     to_user: Mapped[User] = relationship(foreign_keys=(to_user_id,), init=False, lazy='raise', innerjoin=True)
-    subject: Mapped[str] = mapped_column(UnicodeText, nullable=False)
-    body: Mapped[str] = mapped_column(UnicodeText, nullable=False)
-    ref: Mapped[str | None] = mapped_column(UnicodeText, nullable=True)
+    subject: Mapped[str] = mapped_column(StringText, nullable=False)
+    body: Mapped[str] = mapped_column(StringText, nullable=False)
+    ref: Mapped[str | None] = mapped_column(StringText, nullable=True)
     priority: Mapped[int] = mapped_column(SmallInteger, nullable=False)
 
     # defaults

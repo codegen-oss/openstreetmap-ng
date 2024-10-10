@@ -11,8 +11,8 @@ from sqlalchemy import (
     Enum,
     Index,
     LargeBinary,
-    Unicode,
-    UnicodeText,
+    String,
+    StringText,
     func,
     or_,
 )
@@ -77,17 +77,17 @@ class User(Base.Sequential, CreatedAtMixin, RichTextMixin):
     __tablename__ = 'user'
     __rich_text_fields__ = (('description', TextFormat.markdown),)
 
-    email: Mapped[EmailType] = mapped_column(Unicode(EMAIL_MAX_LENGTH), nullable=False)
-    display_name: Mapped[DisplayNameType] = mapped_column(Unicode(DISPLAY_NAME_MAX_LENGTH), nullable=False)
-    password_hashed: Mapped[str] = mapped_column(Unicode(255), nullable=False)
+    email: Mapped[EmailType] = mapped_column(String(EMAIL_MAX_LENGTH), nullable=False)
+    display_name: Mapped[DisplayNameType] = mapped_column(String(DISPLAY_NAME_MAX_LENGTH), nullable=False)
+    password_hashed: Mapped[str] = mapped_column(String(255), nullable=False)
     created_ip: Mapped[IPv4Address | IPv6Address] = mapped_column(INET, nullable=False)
 
     status: Mapped[UserStatus] = mapped_column(Enum(UserStatus), nullable=False)
 
     auth_provider: Mapped[AuthProvider | None] = mapped_column(Enum(AuthProvider), nullable=True)
-    auth_uid: Mapped[str | None] = mapped_column(Unicode, nullable=True)
+    auth_uid: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    language: Mapped[LocaleCode] = mapped_column(Unicode(LOCALE_CODE_MAX_LENGTH), nullable=False)
+    language: Mapped[LocaleCode] = mapped_column(String(LOCALE_CODE_MAX_LENGTH), nullable=False)
     activity_tracking: Mapped[bool] = mapped_column(Boolean, nullable=False)
     crash_reporting: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
@@ -111,7 +111,7 @@ class User(Base.Sequential, CreatedAtMixin, RichTextMixin):
         server_default='{}',
     )
     description: Mapped[str] = mapped_column(
-        UnicodeText,
+        StringText,
         init=False,
         nullable=False,
         server_default='',
@@ -136,13 +136,13 @@ class User(Base.Sequential, CreatedAtMixin, RichTextMixin):
         server_default=AvatarType.default.value,
     )
     avatar_id: Mapped[StorageKey | None] = mapped_column(
-        Unicode(STORAGE_KEY_MAX_LENGTH),
+        String(STORAGE_KEY_MAX_LENGTH),
         init=False,
         nullable=True,
         server_default=None,
     )
     background_id: Mapped[StorageKey | None] = mapped_column(
-        Unicode(STORAGE_KEY_MAX_LENGTH),
+        String(STORAGE_KEY_MAX_LENGTH),
         init=False,
         nullable=True,
         server_default=None,

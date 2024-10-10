@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Enum, ForeignKey, LargeBinary, UnicodeText
+from sqlalchemy import Enum, ForeignKey, LargeBinary, StringText
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.lib.crypto import HASH_SIZE
@@ -30,7 +30,7 @@ class Report(Base.ZID, CreatedAtMixin, RichTextMixin):
     user: Mapped[User] = relationship(lazy='raise', innerjoin=True)
     issue_id: Mapped[int] = mapped_column(ForeignKey(Issue.id), nullable=False)
     category: Mapped[ReportCategory] = mapped_column(Enum(ReportCategory), nullable=False)
-    body: Mapped[str] = mapped_column(UnicodeText, nullable=False)
+    body: Mapped[str] = mapped_column(StringText, nullable=False)
     body_rich_hash: Mapped[bytes | None] = mapped_column(
         LargeBinary(HASH_SIZE),
         init=False,
