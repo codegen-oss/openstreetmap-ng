@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, ForeignKey, PrimaryKeyConstraint, Unicode
+from sqlalchemy import BigInteger, ForeignKey, PrimaryKeyConstraint, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.db.base import Base
@@ -10,7 +10,7 @@ class UserPref(Base.NoID):
 
     user_id: Mapped[int] = mapped_column(ForeignKey(User.id), nullable=False)
     app_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-    key: Mapped[str] = mapped_column(Unicode(255), nullable=False)
-    value: Mapped[str] = mapped_column(Unicode(255), nullable=False)
+    key: Mapped[str] = mapped_column(String(255), nullable=False)
+    value: Mapped[str] = mapped_column(String(255), nullable=False)
 
     __table_args__ = (PrimaryKeyConstraint(user_id, app_id, key),)

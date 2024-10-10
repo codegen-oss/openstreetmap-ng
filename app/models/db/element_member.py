@@ -4,7 +4,7 @@ from sqlalchemy import (
     Index,
     PrimaryKeyConstraint,
     SmallInteger,
-    Unicode,
+    String,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,7 +20,7 @@ class ElementMember(Base.NoID):
 
     type: Mapped[ElementType] = mapped_column(Enum('node', 'way', 'relation', name='element_type'), nullable=False)
     id: Mapped[ElementId] = mapped_column(BigInteger, nullable=False)
-    role: Mapped[str] = mapped_column(Unicode(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(255), nullable=False)
 
     __table_args__ = (
         PrimaryKeyConstraint(sequence_id, order, name='element_member_pkey'),

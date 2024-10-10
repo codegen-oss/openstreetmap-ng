@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Enum, ForeignKey, Unicode
+from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.db.base import Base
@@ -36,7 +36,7 @@ class Issue(Base.Sequential, CreatedAtMixin, UpdatedAtMixin):
     __tablename__ = 'issue'
 
     report_type: Mapped[ReportType] = mapped_column(Enum(ReportType), nullable=False)
-    report_id: Mapped[str] = mapped_column(Unicode(32), nullable=False)
+    report_id: Mapped[str] = mapped_column(String(32), nullable=False)
     assigned_role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False)
 
     # defaults
