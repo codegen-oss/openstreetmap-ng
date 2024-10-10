@@ -28,7 +28,7 @@ class TraceSegment(Base.NoID):
         PrimaryKeyConstraint(trace_id, track_num, segment_num),
         Index(
             'trace_segment_points_idx',
-            points,
+            'points',
             postgresql_using='gist',
         ),
     )
