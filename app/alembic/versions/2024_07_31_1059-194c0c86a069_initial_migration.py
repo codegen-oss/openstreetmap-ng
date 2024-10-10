@@ -53,11 +53,11 @@ def upgrade() -> None:
     op.create_index('element_member_idx', 'element_member', ['type', 'id', 'sequence_id'], unique=False)
     op.create_table('note',
     sa.Column('point', app.models.geometry.PointType(), nullable=False),
-    sa.Column('closed_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
-    sa.Column('hidden_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('closed_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=True),
+    sa.Column('hidden_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
-    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user',
@@ -71,8 +71,8 @@ def upgrade() -> None:
     sa.Column('language', sa.Unicode(length=15), nullable=False),
     sa.Column('activity_tracking', sa.Boolean(), nullable=False),
     sa.Column('crash_reporting', sa.Boolean(), nullable=False),
-    sa.Column('scheduled_delete_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
-    sa.Column('password_changed_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=True),
+    sa.Column('scheduled_delete_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=True),
+    sa.Column('password_changed_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=True),
     sa.Column('roles', sa.ARRAY(sa.Enum('moderator', 'administrator', name='userrole'), as_tuple=True, dimensions=1), server_default='{}', nullable=False),
     sa.Column('description', sa.UnicodeText(), server_default='', nullable=False),
     sa.Column('description_rich_hash', sa.LargeBinary(length=32), nullable=True),
@@ -81,7 +81,7 @@ def upgrade() -> None:
     sa.Column('avatar_id', sa.Unicode(length=64), nullable=True),
     sa.Column('home_point', app.models.geometry.PointType(), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index('user_display_name_idx', 'user', ['display_name'], unique=True)
@@ -90,12 +90,12 @@ def upgrade() -> None:
     op.create_table('changeset',
     sa.Column('user_id', sa.BigInteger(), nullable=True),
     sa.Column('tags', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-    sa.Column('closed_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('closed_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=True),
     sa.Column('size', sa.Integer(), server_default='0', nullable=False),
     sa.Column('union_bounds', app.models.geometry.PolygonType(), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
-    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -113,8 +113,8 @@ def upgrade() -> None:
     sa.Column('language', sa.Unicode(length=15), nullable=False),
     sa.Column('point', app.models.geometry.PointType(), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
-    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -132,8 +132,8 @@ def upgrade() -> None:
     sa.Column('status', sa.Enum('open', 'resolved', 'ignored', name='issuestatus'), server_default='open', nullable=False),
     sa.Column('updated_user_id', sa.BigInteger(), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
-    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['updated_user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -146,9 +146,9 @@ def upgrade() -> None:
     sa.Column('ref', sa.UnicodeText(), nullable=True),
     sa.Column('priority', sa.SmallInteger(), nullable=False),
     sa.Column('processing_counter', sa.SmallInteger(), server_default='0', nullable=False),
-    sa.Column('processing_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('processing_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=True),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['from_user_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['to_user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -164,7 +164,7 @@ def upgrade() -> None:
     sa.Column('from_hidden', sa.Boolean(), server_default='false', nullable=False),
     sa.Column('to_hidden', sa.Boolean(), server_default='false', nullable=False),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['from_user_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['to_user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -178,7 +178,7 @@ def upgrade() -> None:
     sa.Column('body_rich_hash', sa.LargeBinary(length=32), nullable=True),
     sa.Column('body_tsvector', postgresql.TSVECTOR(), sa.Computed("to_tsvector('simple', body)", persisted=True), nullable=False),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['note_id'], ['note.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -200,8 +200,8 @@ def upgrade() -> None:
     sa.Column('redirect_uris', sa.ARRAY(sa.Unicode(length=1000), dimensions=1), nullable=False),
     sa.Column('avatar_id', sa.Unicode(length=64), nullable=True),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
-    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -215,23 +215,23 @@ def upgrade() -> None:
     sa.Column('file_id', sa.Unicode(length=64), nullable=False),
     sa.Column('tags', sa.ARRAY(sa.Unicode(length=40), dimensions=1), server_default='{}', nullable=False),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
-    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user_block',
     sa.Column('from_user_id', sa.BigInteger(), nullable=False),
     sa.Column('to_user_id', sa.BigInteger(), nullable=False),
-    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=True),
     sa.Column('acknowledged', sa.Boolean(), nullable=False),
     sa.Column('body', sa.UnicodeText(), nullable=False),
     sa.Column('body_rich_hash', sa.LargeBinary(length=32), nullable=True),
-    sa.Column('revoked_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('revoked_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=True),
     sa.Column('revoked_user_id', sa.BigInteger(), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
-    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('updated_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['from_user_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['revoked_user_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['to_user_id'], ['user.id'], ),
@@ -249,9 +249,9 @@ def upgrade() -> None:
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('user_email_hashed', sa.LargeBinary(length=32), nullable=False),
     sa.Column('token_hashed', sa.LargeBinary(length=32), nullable=False),
-    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=True), nullable=False),
+    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=False),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -260,9 +260,9 @@ def upgrade() -> None:
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('user_email_hashed', sa.LargeBinary(length=32), nullable=False),
     sa.Column('token_hashed', sa.LargeBinary(length=32), nullable=False),
-    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=True), nullable=False),
+    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=False),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -272,9 +272,9 @@ def upgrade() -> None:
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('user_email_hashed', sa.LargeBinary(length=32), nullable=False),
     sa.Column('token_hashed', sa.LargeBinary(length=32), nullable=False),
-    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=True), nullable=False),
+    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=False),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['to_user_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -283,9 +283,9 @@ def upgrade() -> None:
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('user_email_hashed', sa.LargeBinary(length=32), nullable=False),
     sa.Column('token_hashed', sa.LargeBinary(length=32), nullable=False),
-    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=True), nullable=False),
+    sa.Column('expires_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=False),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -304,7 +304,7 @@ def upgrade() -> None:
     sa.Column('body', sa.UnicodeText(), nullable=False),
     sa.Column('body_rich_hash', sa.LargeBinary(length=32), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['changeset_id'], ['changeset.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -323,7 +323,7 @@ def upgrade() -> None:
     sa.Column('body', sa.UnicodeText(), nullable=False),
     sa.Column('body_rich_hash', sa.LargeBinary(length=32), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['diary_id'], ['diary.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -345,7 +345,7 @@ def upgrade() -> None:
     sa.Column('tags', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('point', app.models.geometry.PointType(), nullable=True),
     sa.Column('next_sequence_id', sa.BigInteger(), nullable=True),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['changeset_id'], ['changeset.id'], ),
     sa.PrimaryKeyConstraint('sequence_id', name='element_pkey')
     )
@@ -359,7 +359,7 @@ def upgrade() -> None:
     sa.Column('body', sa.UnicodeText(), nullable=False),
     sa.Column('body_rich_hash', sa.LargeBinary(length=32), nullable=True),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False, minvalue=1), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['issue_id'], ['issue.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -372,9 +372,9 @@ def upgrade() -> None:
     sa.Column('redirect_uri', sa.Unicode(length=1000), nullable=True),
     sa.Column('code_challenge_method', sa.Enum('plain', 'S256', name='oauth2codechallengemethod'), nullable=True),
     sa.Column('code_challenge', sa.Unicode(length=255), nullable=True),
-    sa.Column('authorized_at', postgresql.TIMESTAMP(timezone=True), nullable=True),
+    sa.Column('authorized_at', postgresql.TIMESTAMP(timezone=timezone=True), nullable=True),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['application_id'], ['oauth2_application.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -388,7 +388,7 @@ def upgrade() -> None:
     sa.Column('body', sa.UnicodeText(), nullable=False),
     sa.Column('body_rich_hash', sa.LargeBinary(length=32), nullable=True),
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=timezone=True), server_default=sa.text('statement_timestamp()'), nullable=False),
     sa.ForeignKeyConstraint(['issue_id'], ['issue.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -398,7 +398,7 @@ def upgrade() -> None:
     sa.Column('track_num', sa.SmallInteger(), nullable=False),
     sa.Column('segment_num', sa.SmallInteger(), nullable=False),
     sa.Column('points', app.models.geometry.MultiPointType(), nullable=False),
-    sa.Column('capture_times', sa.ARRAY(postgresql.TIMESTAMP(timezone=True), dimensions=1), nullable=True),
+    sa.Column('capture_times', sa.ARRAY(postgresql.TIMESTAMP(timezone=timezone=True), dimensions=1), nullable=True),
     sa.Column('elevations', sa.ARRAY(sa.REAL()), nullable=True),
     sa.ForeignKeyConstraint(['trace_id'], ['trace.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('trace_id', 'track_num', 'segment_num')
