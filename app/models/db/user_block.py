@@ -23,7 +23,7 @@ class UserBlock(Base.Sequential, CreatedAtMixin, UpdatedAtMixin, RichTextMixin):
     from_user: Mapped[User] = relationship(foreign_keys=(from_user_id,), lazy='raise', innerjoin=True)
     to_user_id: Mapped[int] = mapped_column(ForeignKey(User.id), nullable=False)
     to_user: Mapped[User] = relationship(foreign_keys=(to_user_id,), lazy='raise', innerjoin=True)
-    expires_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     acknowledged: Mapped[bool] = mapped_column(Boolean, nullable=False)
     body: Mapped[str] = mapped_column(UnicodeText, nullable=False)
     body_rich_hash: Mapped[bytes | None] = mapped_column(
@@ -34,7 +34,7 @@ class UserBlock(Base.Sequential, CreatedAtMixin, UpdatedAtMixin, RichTextMixin):
     )
 
     # defaults
-    revoked_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(True), nullable=True, server_default=None)
+    revoked_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True, server_default=None)
     revoked_user_id: Mapped[int | None] = mapped_column(ForeignKey(User.id), nullable=True, server_default=None)
     revoked_user: Mapped[User | None] = relationship(foreign_keys=(revoked_user_id,), lazy='raise')
 
