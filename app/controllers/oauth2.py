@@ -1,6 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
+from starlette import status
+from starlette.responses import RedirectResponse
 
 from app.config import APP_URL
 from app.lib.auth_context import web_user
@@ -11,10 +13,12 @@ from app.models.db.oauth2_token import (
     OAuth2GrantType,
     OAuth2ResponseMode,
     OAuth2ResponseType,
+    OAuth2TokenOOB,
 )
 from app.models.db.user import User
 from app.models.scope import PUBLIC_SCOPES, Scope
 from app.services.oauth2_token_service import OAuth2TokenService
+from app.utils import extend_query_params
 
 router = APIRouter()
 
@@ -43,7 +47,9 @@ async def openid_configuration():
 
 
 @router.get('/oauth2/authorize')
+@router.post('/oauth2/authorize')
 async def authorize(
+    request: Request,
     _: Annotated[User, web_user()],
     client_id: Annotated[str, Query(min_length=1)],
     redirect_uri: Annotated[str, Query(min_length=1)],
@@ -53,8 +59,11 @@ async def authorize(
     state: Annotated[str | None, Query(min_length=1)] = None,
     response_type: Annotated[OAuth2ResponseType, Query()] = OAuth2ResponseType.code,
     response_mode: Annotated[OAuth2ResponseMode, Query()] = OAuth2ResponseMode.query,
-    init: Annotated[bool, Query(include_in_schema=False)] = True,
 ):
+    if response_type != OAuth2ResponseType.code:
+        raise NotImplementedError(f'Unsupported response type {response_type!r}')
+
+    init = request.method == 'GET'
     scopes = Scope.from_str(scope)
     auth_result = await OAuth2TokenService.authorize(
         init=init,
@@ -66,21 +75,26 @@ async def authorize(
         state=state,
     )
     if isinstance(auth_result, OAuth2Application):
-        form_data: list[tuple[str, str]] = [
-            ('client_id', client_id),
-            ('redirect_uri', redirect_uri),
-            ('scope', scope),
-            ('response_type', response_type.value),
-            ('response_mode', response_mode.value),
-            ('init', 'False'),
-        ]
-        if code_challenge_method is not None:
-            form_data.append(('code_challenge_method', code_challenge_method.value))
-        if code_challenge is not None:
-            form_data.append(('code_challenge', code_challenge))
-        if state is not None:
-            form_data.append(('state', state))
         return render_response(
             'oauth2/authorize.jinja2',
-            {'app': auth_result, 'scopes': scopes, 'redirect_uri': redirect_uri, 'form_data': form_data},
+            {'app': auth_result, 'scopes': scopes, 'redirect_uri': redirect_uri},
         )
+    if isinstance(auth_result, OAuth2TokenOOB):
+        authorization_code = auth_result.authorization_code
+        if state is not None:
+            authorization_code += f'#{state}'
+        return render_response(
+            'oauth2/oob.jinja2',
+            {'authorization_code': authorization_code},
+        )
+    if response_mode in (OAuth2ResponseMode.query, OAuth2ResponseMode.fragment):
+        is_fragment = response_mode == OAuth2ResponseMode.fragment
+        final_uri = extend_query_params(redirect_uri, auth_result, fragment=is_fragment)
+        return RedirectResponse(final_uri, status.HTTP_303_SEE_OTHER)
+    if response_mode == OAuth2ResponseMode.form_post:
+        return render_response(
+            'oauth2/response_form_post.jinja2',
+            {'redirect_uri': redirect_uri, 'auth_result': auth_result},
+        )
+
+    raise NotImplementedError(f'Unsupported response mode {response_mode!r}')
