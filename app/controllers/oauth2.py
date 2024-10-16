@@ -2,6 +2,7 @@ from base64 import b64decode
 from typing import Annotated
 
 from fastapi import APIRouter, Form, Header, Query, Request
+from pydantic import SecretStr
 from starlette import status
 from starlette.responses import RedirectResponse
 
@@ -85,9 +86,7 @@ async def authorize(
             {'app': auth_result, 'scopes': scopes, 'redirect_uri': redirect_uri},
         )
     if isinstance(auth_result, OAuth2TokenOOB):
-        authorization_code = auth_result.authorization_code
-        if state is not None:
-            authorization_code += f'#{state}'
+        authorization_code = str(auth_result)
         response = render_response(
             'oauth2/oob.jinja2',
             {'authorization_code': authorization_code},
@@ -114,7 +113,7 @@ async def token(
     code: Annotated[str, Form(min_length=1)],
     code_verifier: Annotated[str | None, Form(min_length=1, max_length=OAUTH2_CODE_CHALLENGE_MAX_LENGTH)] = None,
     client_id: Annotated[str | None, Form(min_length=1)] = None,
-    client_secret: Annotated[str | None, Form(min_length=1)] = None,
+    client_secret: Annotated[SecretStr | None, Form(min_length=1)] = None,
     authorization: Annotated[str | None, Header(min_length=1)] = None,
 ):
     if grant_type != OAuth2GrantType.authorization_code:
@@ -122,13 +121,17 @@ async def token(
     if client_id is None and client_secret is None and authorization is not None:
         scheme, _, param = authorization.partition(' ')
         if scheme.casefold() == 'basic':
-            client_id, _, client_secret = b64decode(param).decode().partition(':')
-    if not client_id:
+            parts = b64decode(param).decode().partition(':')
+            client_id = parts[0]
+            client_secret = SecretStr(parts[2])
+    if client_id is None:
         raise_for().oauth_bad_client_id()
-    if not client_secret:
-        raise_for().oauth_bad_client_secret()
+    if client_secret is None:
+        client_secret = SecretStr('')
 
     return await OAuth2TokenService.token(
+        client_id=client_id,
+        client_secret=client_secret,
         authorization_code=code,
         verifier=code_verifier,
         redirect_uri=redirect_uri,
