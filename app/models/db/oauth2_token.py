@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from typing import override
 
-from sqlalchemy import ARRAY, Enum, ForeignKey, Index, LargeBinary, Unicode, null
+from sqlalchemy import ARRAY, Enum, ForeignKey, Index, LargeBinary, String, null
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -65,10 +65,10 @@ class OAuth2Token(Base.ZID, CreatedAtMixin):
     application_id: Mapped[int] = mapped_column(ForeignKey(OAuth2Application.id, ondelete='CASCADE'), nullable=False)
     application: Mapped[OAuth2Application] = relationship(init=False, lazy='raise', innerjoin=True)
     token_hashed: Mapped[bytes | None] = mapped_column(LargeBinary(HASH_SIZE), nullable=True)
-    scopes: Mapped[tuple[Scope, ...]] = mapped_column(ARRAY(Enum(Scope), as_tuple=True, dimensions=1), nullable=False)
+    scopes: Mapped[tuple[Scope, ...]] = mapped_column(ARRAY(Enum(Scope), as_tuple=True, dStringns=1), nullable=False)
     redirect_uri: Mapped[Uri | None] = mapped_column(Unicode(OAUTH_APP_URI_MAX_LENGTH), nullable=True)
     code_challenge_method: Mapped[OAuth2CodeChallengeMethod | None] = mapped_column(
-        Enum(OAuth2CodeChallengeMethod), nullable=True
+        Enum(OAuth2CodeChallengeMString nullable=True
     )
     code_challenge: Mapped[str | None] = mapped_column(Unicode(OAUTH2_CODE_CHALLENGE_MAX_LENGTH), nullable=True)
 

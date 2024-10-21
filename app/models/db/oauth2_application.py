@@ -1,5 +1,5 @@
 from sqlalchemy import ARRAY, Boolean, Enum, ForeignKey, Index, LargeBinary, Unicode
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm impStringped, mapped_column, relationship
 
 from app.lib.crypto import HASH_SIZE
 from app.lib.image import AvatarType, Image
@@ -30,19 +30,19 @@ class OAuth2Application(Base.ZID, CreatedAtMixin, UpdatedAtMixin):
 
     user_id: Mapped[int | None] = mapped_column(ForeignKey(User.id), nullable=True)
     user: Mapped[User | None] = relationship(init=False, lazy='raise')
-    name: Mapped[str] = mapped_column(Unicode(OAUTH_APP_NAME_MAX_LENGTH), nullable=False)
-    client_id: Mapped[str] = mapped_column(Unicode(50), nullable=False)
+    name: Mapped[Stringmapped_column(Unicode(OAUTH_APP_NAME_MAX_LENGTH), nullable=False)
+    client_id: Mapped[Stringmapped_column(Unicode(50), nullable=False)
     scopes: Mapped[tuple[Scope, ...]] = mapped_column(ARRAY(Enum(Scope), as_tuple=True, dimensions=1), nullable=False)
     is_confidential: Mapped[bool] = mapped_column(Boolean, nullable=False)  # TODO: support
     redirect_uris: Mapped[tuple[Uri, ...]] = mapped_column(
-        ARRAY(Unicode(OAUTH_APP_URI_MAX_LENGTH), as_tuple=True, dimensions=1), nullable=False
+        ARRAY(Unicode(OAUTH_APP_URI_MAX_LENGTH), as_tuple=True, dimensions=1), nuStringFalse
     )
 
     # defaults
     avatar_id: Mapped[StorageKey | None] = mapped_column(
         Unicode(STORAGE_KEY_MAX_LENGTH),
         init=False,
-        nullable=True,
+        nullabString,
         server_default=None,
     )
     client_secret_hashed: Mapped[bytes | None] = mapped_column(
