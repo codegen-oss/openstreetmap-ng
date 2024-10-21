@@ -7,7 +7,12 @@ from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.lib.crypto import HASH_SIZE
-from app.limits import OAUTH2_CODE_CHALLENGE_MAX_LENGTH, OAUTH_APP_URI_MAX_LENGTH
+from app.limits import (
+    OAUTH2_CODE_CHALLENGE_MAX_LENGTH,
+    OAUTH_APP_URI_MAX_LENGTH,
+    OAUTH_PAT_NAME_MAX_LENGTH,
+    OAUTH_SECRET_PREVIEW_LENGTH,
+)
 from app.models.db.base import Base
 from app.models.db.created_at_mixin import CreatedAtMixin
 from app.models.db.oauth2_application import OAuth2Application
@@ -59,7 +64,7 @@ class OAuth2Token(Base.ZID, CreatedAtMixin):
     user: Mapped[User] = relationship(init=False, lazy='raise', innerjoin=True)
     application_id: Mapped[int] = mapped_column(ForeignKey(OAuth2Application.id, ondelete='CASCADE'), nullable=False)
     application: Mapped[OAuth2Application] = relationship(init=False, lazy='raise', innerjoin=True)
-    token_hashed: Mapped[bytes] = mapped_column(LargeBinary(HASH_SIZE), nullable=False)
+    token_hashed: Mapped[bytes | None] = mapped_column(LargeBinary(HASH_SIZE), nullable=True)
     scopes: Mapped[tuple[Scope, ...]] = mapped_column(ARRAY(Enum(Scope), as_tuple=True, dimensions=1), nullable=False)
     redirect_uri: Mapped[Uri | None] = mapped_column(Unicode(OAUTH_APP_URI_MAX_LENGTH), nullable=True)
     code_challenge_method: Mapped[OAuth2CodeChallengeMethod | None] = mapped_column(
@@ -75,8 +80,26 @@ class OAuth2Token(Base.ZID, CreatedAtMixin):
         server_default=None,
     )
 
+    # PATs
+    name: Mapped[str | None] = mapped_column(
+        Unicode(OAUTH_PAT_NAME_MAX_LENGTH),
+        init=False,
+        nullable=True,
+        server_default=None,
+    )
+    token_preview: Mapped[str | None] = mapped_column(
+        Unicode(OAUTH_SECRET_PREVIEW_LENGTH),
+        init=False,
+        nullable=True,
+        server_default=None,
+    )
+
     __table_args__ = (
-        Index('oauth2_token_hashed_idx', token_hashed),
+        Index(
+            'oauth2_token_hashed_idx',
+            token_hashed,
+            postgresql_where=token_hashed != null(),
+        ),
         Index('oauth2_token_user_app_idx', user_id, application_id),
         Index(
             'oauth2_token_authorized_user_app_idx',

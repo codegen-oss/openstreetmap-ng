@@ -4,12 +4,13 @@ from typing import Annotated
 
 import numpy as np
 from email_validator.rfc_constants import EMAIL_MAX_LENGTH
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Request
 from starlette import status
 from starlette.responses import RedirectResponse
 
 from app.lib.auth_context import auth_user, web_user
 from app.lib.date_utils import format_short_date, get_month_name, get_weekday_name, utcnow
+from app.lib.exceptions_context import raise_for
 from app.lib.legal import legal_terms
 from app.lib.render_response import render_response
 from app.limits import (
@@ -19,6 +20,7 @@ from app.limits import (
     PASSWORD_MIN_LENGTH,
     URLSAFE_BLACKLIST,
     USER_ACTIVITY_CHART_WEEKS,
+    USER_DESCRIPTION_MAX_LENGTH,
     USER_NEW_DAYS,
     USER_RECENT_ACTIVITY_ENTRIES,
 )
@@ -34,6 +36,21 @@ from app.queries.user_query import UserQuery
 from app.utils import json_encodes
 
 router = APIRouter()
+
+
+@router.get('/user/permalink/{user_id:int}{path:path}')
+async def permalink(
+    request: Request,
+    user_id: Annotated[int, Path(gt=0)],
+    path: Annotated[str | None, Path()],
+):
+    user = await UserQuery.find_one_by_id(user_id)
+    if user is None:
+        raise_for().user_not_found(user_id)
+    location = f'/user/{user.display_name}{path}'
+    if query := request.url.query:
+        location += f'?{query}'
+    return RedirectResponse(location, status.HTTP_302_FOUND)
 
 
 # TODO: optimize
@@ -111,6 +128,7 @@ async def index(display_name: Annotated[str, Path(min_length=1, max_length=DISPL
             'diaries': diaries,
             'groups_count': groups_count,
             'groups': groups,
+            'USER_DESCRIPTION_MAX_LENGTH': USER_DESCRIPTION_MAX_LENGTH,
             'USER_RECENT_ACTIVITY_ENTRIES': USER_RECENT_ACTIVITY_ENTRIES,
             **activity_data,
         },
@@ -137,9 +155,10 @@ async def _get_activity_data(user: User) -> dict:
         tuple(changesets_count_per_day.get(date.replace(tzinfo=UTC), 0) for date in dates_range),
         dtype=np.uint64,
     )
-    max_activity_clip = np.clip(np.percentile(activity, 95), 1, None)
+    activity_positive = activity[activity > 0]
+    max_activity_clip = np.percentile(activity_positive, 95) if activity_positive.size else 1
     activity_level_perc = np.clip(activity / max_activity_clip, 0, 1)
-    activity_levels = np.round(activity_level_perc * 19).astype(np.uint8)
+    activity_levels = np.ceil(activity_level_perc * 19).astype(np.uint8)
 
     weekdays = tuple(
         get_weekday_name(date, short=True)

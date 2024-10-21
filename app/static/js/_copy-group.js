@@ -35,17 +35,11 @@ const onCopyButtonClick = async ({ target }) => {
     }, 1500)
 }
 
-/**
- * Initialize copy groups
- * @param {NodeListOf<HTMLDivElement>} copyGroups
- * @returns {void}
- */
-export const initializeCopyGroups = (copyGroups) => {
-    console.debug("Initializing", copyGroups.length, "copy groups")
-    for (const copyGroup of copyGroups) {
-        const copyInput = copyGroup.querySelector(".form-control")
-        copyInput.addEventListener("focus", onCopyInputFocus)
-        const copyButton = copyGroup.querySelector(".bi-copy").parentElement
-        copyButton.addEventListener("click", onCopyButtonClick)
-    }
+const copyGroups = document.querySelectorAll(".copy-group")
+console.debug("Initializing", copyGroups.length, "copy groups")
+for (const copyGroup of copyGroups) {
+    const copyInput = copyGroup.querySelector(".form-control")
+    copyInput.addEventListener("focus", onCopyInputFocus)
+    const copyButton = copyGroup.querySelector(".bi-copy").parentElement
+    copyButton.addEventListener("click", onCopyButtonClick)
 }

@@ -1,10 +1,12 @@
 import { Collapse } from "bootstrap"
+import { qsEncode, qsParse } from "../../_qs.js"
 import { configureStandardForm } from "../../_standard-form.js"
+import { initializeResetSecretControls } from "./_reset-secret-control.js"
 
-const settingsApplicationsBody = document.querySelector("body.settings-applications-body")
-if (settingsApplicationsBody) {
+const body = document.querySelector("body.settings-applications-body")
+if (body) {
     // Fixup links in buttons
-    const accordionButtons = settingsApplicationsBody.querySelectorAll(".accordion-button")
+    const accordionButtons = body.querySelectorAll(".accordion-button")
     for (const button of accordionButtons) {
         const collapse = document.querySelector(button.dataset.bsTarget)
         const collapseInstance = Collapse.getOrCreateInstance(collapse, { toggle: false })
@@ -19,7 +21,8 @@ if (settingsApplicationsBody) {
         button.addEventListener("click", onAccordionButtonClick)
     }
 
-    const revokeApplicationForms = settingsApplicationsBody.querySelectorAll("form.revoke-application-form")
+    // settings/applications + settings/applications/tokens
+    const revokeApplicationForms = body.querySelectorAll("form.revoke-application-form")
     for (const form of revokeApplicationForms) {
         const onRevokeApplicationFormSuccess = () => {
             form.closest("li").remove()
@@ -28,9 +31,10 @@ if (settingsApplicationsBody) {
         configureStandardForm(form, onRevokeApplicationFormSuccess)
     }
 
-    const createApplicationButton = settingsApplicationsBody.querySelector(".create-application-btn")
+    // settings/applications/admin
+    const createApplicationButton = body.querySelector(".create-application-btn")
     if (createApplicationButton) {
-        const createApplicationForm = settingsApplicationsBody.querySelector(".create-application-form")
+        const createApplicationForm = body.querySelector(".create-application-form")
 
         const onCreateNewApplicationClick = () => {
             createApplicationButton.classList.add("d-none")
@@ -45,5 +49,20 @@ if (settingsApplicationsBody) {
 
         createApplicationButton.addEventListener("click", onCreateNewApplicationClick)
         configureStandardForm(createApplicationForm, onCreateApplicationFormSuccess)
+    }
+
+    // settings/applications/tokens
+    const createForm = body.querySelector("form.create-token-form")
+    if (createForm) {
+        // On success callback, reload the page
+        const onCreateFormSuccess = ({ token_id }) => {
+            console.debug("onCreateFormSuccess", token_id)
+            const searchParams = qsParse(window.location.search.substring(1))
+            searchParams.expand = token_id
+            window.location = `${window.location.pathname}?${qsEncode(searchParams)}${window.location.hash}`
+        }
+
+        configureStandardForm(createForm, onCreateFormSuccess)
+        initializeResetSecretControls()
     }
 }

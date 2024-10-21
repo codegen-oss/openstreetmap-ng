@@ -10,8 +10,9 @@ from sqlalchemy.orm import load_only
 from app.config import TEST_ENV, TEST_USER_DOMAIN
 from app.db import db_commit
 from app.lib.auth_context import auth_context
-from app.lib.crypto import encrypt
+from app.lib.crypto import hash_bytes
 from app.lib.locale import DEFAULT_LOCALE
+from app.limits import OAUTH_SECRET_PREVIEW_LENGTH
 from app.models.db.oauth2_application import OAuth2Application
 from app.models.db.user import User, UserRole, UserStatus
 from app.models.scope import PUBLIC_SCOPES, Scope
@@ -52,18 +53,27 @@ class TestService:
                     TestService.create_oauth2_application(
                         name='TestApp',
                         client_id='testapp',
-                        client_secret='testapp.secret',  # noqa: S106
+                        client_secret='',
                         scopes=PUBLIC_SCOPES,
-                        is_confidential=True,
+                        is_confidential=False,
                     )
                 )
                 tg.create_task(
                     TestService.create_oauth2_application(
-                        name='TestApp-Public',
-                        client_id='testapp-public',
+                        name='TestApp-Minimal',
+                        client_id='testapp-minimal',
+                        client_secret='',
+                        scopes=(),
+                        is_confidential=False,
+                    )
+                )
+                tg.create_task(
+                    TestService.create_oauth2_application(
+                        name='TestApp-Secret',
+                        client_id='testapp-secret',
                         client_secret='testapp.secret',  # noqa: S106
                         scopes=PUBLIC_SCOPES,
-                        is_confidential=False,
+                        is_confidential=True,
                     )
                 )
 
@@ -137,24 +147,29 @@ class TestService:
             app = (await session.execute(stmt)).scalar_one_or_none()
             if app is None:
                 # create new application
-                session.add(
-                    OAuth2Application(
-                        user_id=1,
-                        name=name,
-                        client_id=client_id,
-                        client_secret_encrypted=encrypt(client_secret),
-                        scopes=scopes,
-                        is_confidential=is_confidential,
-                        redirect_uris=(
-                            Uri('http://localhost/callback'),
-                            Uri('urn:ietf:wg:oauth:2.0:oob'),
-                        ),
-                    )
+                app = OAuth2Application(
+                    user_id=1,
+                    name=name,
+                    client_id=client_id,
+                    scopes=scopes,
+                    is_confidential=is_confidential,
+                    redirect_uris=(
+                        Uri('http://localhost/callback'),
+                        Uri('urn:ietf:wg:oauth:2.0:oob'),
+                    ),
                 )
+                app.client_secret_hashed = hash_bytes(client_secret)
+                app.client_secret_preview = client_secret[:OAUTH_SECRET_PREVIEW_LENGTH]
+                session.add(app)
             else:
                 # update existing application
                 app.name = name
                 app.scopes = scopes
                 app.is_confidential = is_confidential
+
+                # TODO: remove after migrations reset
+                if app.client_secret_preview is None:
+                    app.client_secret_hashed = hash_bytes(client_secret)
+                    app.client_secret_preview = client_secret[:OAUTH_SECRET_PREVIEW_LENGTH]
 
         logging.info('Upserted test OAuth2 application %r', name)

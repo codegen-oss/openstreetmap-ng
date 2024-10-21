@@ -75,6 +75,11 @@ user:
   not_member_of_any_group: Not a member of any group
   not_found: User not found
   edit_background: Edit background
+  about_me: About me
+  edit_description: Edit description
+  you_have_not_provided_a_description: You have not provided a description.
+  your_profile_description_is_displayed_publicly: Your profile description is displayed publicly.
+  contributions: Contributions
   activity:
     recent: Recent activity
     summary: "{{mapping_day}} with {{num_changesets}} in {{last_n_months}}"
@@ -104,6 +109,9 @@ privacy:
       We will use this information to fix bugs and improve your experience.
 results:
   we_did_not_find_any_results: We did not find any results for your search.
+rich_text:
+  formatting_tips: Formatting tips
+  detailed_formatting_guide: Detailed formatting guide
 search:
   search_this_area: Search this area
 settings:
@@ -128,37 +136,57 @@ settings:
   password_has_been_changed: Your password has been changed
   two_factor_auth: Two-factor authentication
   active_sessions: Active sessions
-  session_id: "Session ID: {{id}}"
+  session_colon_id: "Session ID: {{id}}"
   this_is_your_current_session: This is your current session
-  authorized_at: "Authorized at: {{date}}"
-  created_at: "Created at: {{date}}"
+  authorized_at: "Authorized at {{date}}"
+  created_at: "Created at {{date}}"
+  updated_at: "Updated at {{date}}"
   authorizations:
     title: Authorizations
     description: |-
-      The following applications have permission to act on your behalf
-      and access your OpenStreetMap data based on the permissions you granted.
-      Click an application to see a detailed list of permissions or to revoke its access.
+      The following applications have been granted permission to act on your behalf
+      and access your OpenStreetMap data based on your approved scopes.
+      Click on an application to view its detailed permissions or revoke its access.
   my_applications:
     title: My applications
     title_name: "My application: {{name}}"
     description: |-
-      Here, you can manage all the application you own.
-      These applications can be used to integrate with other services, access specific data, or automate tasks.
+      Here you can manage all your OAuth 2.0 applications.
+      These applications can integrate external services, access specific data, or automate tasks.
       Review the list below to update settings, manage permissions, or delete any application you no longer need.
-    you_dont_have_any_applications_yet: You don't have any applications yet.
+    my_tokens_hint: |-
+      Consider using access tokens when working on personal projects.
+    you_have_not_created_any_applications_yet: You haven't created any applications yet.
     create_new_application: Create new application
   my_tokens:
     title: My tokens
+    description: |-
+      Personal access tokens provide a simple way to authenticate API requests.
+      They're ideal for personal projects and when you don't need full OAuth authorization flow.
+      Remember, these tokens provide access to your account, so keep them secure and private.
+    how_to_use:
+      title: Using your tokens
+      description: |-
+        Once you've created a token and generated its secret, you can use it to authenticate API requests.
+        Include the token in the Authorization header using the Bearer authentication scheme.
+        Remember to keep your tokens secure. They provide access to your account, so treat them like passwords.
+      example_http_request: Example HTTP request
+      example_curl_command: Example cURL command
+    you_have_not_created_any_tokens_yet: You haven't created any tokens yet.
+    create_new_token: Create new token
+    name_hint: This name will help you identify the token later.
   owned_by_user: Owned by {{name}}
   owned_by_you: Owned by you
   requested_permissions: Requested permissions
   name: Name
+  access_token: Access token
+  new_access_token: New access token
   client_id: Client ID
   client_secret: Client secret
   new_client_secret: New client secret
-  new_client_secret_question: |-
-    Are you sure you want to generate a new client secret?
-    The new client secret will be shown only once.
+  new_secret_question: |-
+    Are you sure you want to generate a new secret?
+    The new secret will be shown only once.
   client_type: Client type
   public_client: Public
   public_client_description: |-
@@ -274,6 +302,7 @@ action:
   reset_filters: Reset filters
   resolved: resolved
   revoke_access: Revoke access
+  revoke_key: Revoke key
   save_changes: Save changes
   submit: Submit
   view_all: View all

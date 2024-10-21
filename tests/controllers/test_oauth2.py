@@ -8,6 +8,9 @@ from starlette import status
 
 from app.config import APP_URL
 from app.lib.buffered_random import buffered_rand_urlsafe
+from app.lib.date_utils import utcnow
+from app.lib.locale import DEFAULT_LOCALE
+from app.lib.xmltodict import XMLToDict
 from app.models.db.oauth2_token import OAuth2CodeChallengeMethod, OAuth2ResponseMode, OAuth2TokenEndpointAuthMethod
 
 
@@ -27,7 +30,6 @@ async def test_authorize_invalid_system_app(client: AsyncClient):
         base_url=client.base_url,
         transport=client._transport,  # noqa: SLF001
         client_id='SystemApp.web',
-        client_secret='',
         scope='',
         redirect_uri='urn:ietf:wg:oauth:2.0:oob',
     )
@@ -36,6 +38,22 @@ async def test_authorize_invalid_system_app(client: AsyncClient):
     r = await client.post(authorization_url)
     assert r.status_code == status.HTTP_401_UNAUTHORIZED
     assert r.json()['detail'] == 'Invalid client ID'
+
+
+async def test_authorize_invalid_extra_scopes(client: AsyncClient):
+    client.headers['Authorization'] = 'User user1'
+    auth_client = AsyncOAuth2Client(
+        base_url=client.base_url,
+        transport=client._transport,  # noqa: SLF001
+        client_id='testapp-minimal',
+        scope='read_prefs',
+        redirect_uri='urn:ietf:wg:oauth:2.0:oob',
+    )
+    authorization_url, _ = auth_client.create_authorization_url('/oauth2/authorize')
+
+    r = await client.post(authorization_url)
+    assert r.status_code == status.HTTP_400_BAD_REQUEST
+    assert r.json()['detail'] == 'Invalid authorization scopes'
 
 
 @pytest.mark.parametrize(
@@ -51,7 +69,7 @@ async def test_authorize_token_oob(
     auth_client = AsyncOAuth2Client(
         base_url=client.base_url,
         transport=client._transport,  # noqa: SLF001
-        client_id='testapp',
+        client_id='testapp-secret',
         client_secret='testapp.secret',  # noqa: S106
         scope='',
         redirect_uri='urn:ietf:wg:oauth:2.0:oob',
@@ -79,7 +97,7 @@ async def test_authorize_token_oob(
     data: dict = await auth_client.fetch_token(
         '/oauth2/token',
         grant_type='authorization_code',
-        auth=('testapp', 'testapp.secret'),
+        auth=('testapp-secret', 'testapp.secret'),
         code=authorization_code,
         code_verifier=code_verifier,
     )
@@ -101,7 +119,7 @@ async def test_authorize_token_response_redirect(client: AsyncClient, is_fragmen
     auth_client = AsyncOAuth2Client(
         base_url=client.base_url,
         transport=client._transport,  # noqa: SLF001
-        client_id='testapp',
+        client_id='testapp-secret',
         client_secret='testapp.secret',  # noqa: S106
         scope='',
         redirect_uri='http://localhost/callback',
@@ -124,7 +142,7 @@ async def test_authorize_token_response_redirect(client: AsyncClient, is_fragmen
     data: dict = await auth_client.fetch_token(
         '/oauth2/token',
         grant_type='authorization_code',
-        auth=('testapp', 'testapp.secret'),
+        auth=('testapp-secret', 'testapp.secret'),
         code=authorization_code,
     )
     assert data['access_token']
@@ -144,7 +162,7 @@ async def test_authorize_response_form_post(client: AsyncClient):
     auth_client = AsyncOAuth2Client(
         base_url=client.base_url,
         transport=client._transport,  # noqa: SLF001
-        client_id='testapp',
+        client_id='testapp-secret',
         client_secret='testapp.secret',  # noqa: S106
         scope='',
         redirect_uri='http://localhost/callback',
@@ -158,12 +176,75 @@ async def test_authorize_response_form_post(client: AsyncClient):
     assert 'action="http://localhost/callback"' in r.text
 
 
-async def test_authorize_token_public_app(client: AsyncClient):
+async def test_authorize_token_introspect_userinfo_revoke_public_app(client: AsyncClient):
     client.headers['Authorization'] = 'User user1'
     auth_client = AsyncOAuth2Client(
         base_url=client.base_url,
         transport=client._transport,  # noqa: SLF001
-        client_id='testapp-public',
+        client_id='testapp',
+        scope='',
+        redirect_uri='urn:ietf:wg:oauth:2.0:oob',
+    )
+    authorization_url, state = auth_client.create_authorization_url('/oauth2/authorize')
+
+    r = await client.post(authorization_url)
+    assert r.is_success, r.text
+
+    authorization_code = r.headers['Test-OAuth2-Authorization-Code']
+    authorization_code, _, state_response = authorization_code.partition('#')
+    assert state == state_response
+
+    authorization_date = utcnow()
+    data: dict = await auth_client.fetch_token(
+        '/oauth2/token',
+        grant_type='authorization_code',
+        code=authorization_code,
+    )
+    assert data['access_token']
+    assert data['token_type'] == 'Bearer'  # noqa: S105
+    assert data['scope'] == ''
+    assert data['created_at']
+    access_token = data['access_token']
+
+    r = await auth_client.get('/api/0.6/user/details.json')
+    assert r.is_success, r.text
+    assert r.json()['user']['display_name'] == 'user1'
+
+    r = await auth_client.post('/oauth2/introspect', data={'token': access_token})
+    assert r.is_success, r.text
+    data = r.json()
+    assert data['active'] is True
+    assert data['iss'] == APP_URL
+    assert data['iat'] >= int(authorization_date.timestamp())
+    assert data['client_id'] == 'testapp'
+    assert data['scope'] == ''
+    assert data['username'] == 'user1'
+    assert 'exp' not in data
+
+    r = await auth_client.get('/oauth2/userinfo')
+    assert r.is_success, r.text
+    data = r.json()
+    assert data['username'] == 'user1'
+    assert data['picture'].startswith(APP_URL)
+    assert data['locale'] == DEFAULT_LOCALE
+    r = await auth_client.get(data['picture'])
+    r.raise_for_status()
+
+    r = await auth_client.post('/oauth2/revoke', data={'token': access_token})
+    assert r.is_success, r.text
+
+    r = await auth_client.get('/api/0.6/user/details.json')
+    assert r.status_code == status.HTTP_401_UNAUTHORIZED, r.text
+    r = await auth_client.post('/oauth2/introspect', data={'token': access_token})
+    assert r.status_code == status.HTTP_401_UNAUTHORIZED, r.text
+
+
+async def test_access_token_in_form(client: AsyncClient):
+    client.headers['Authorization'] = 'User user1'
+    auth_client = AsyncOAuth2Client(
+        base_url=client.base_url,
+        transport=client._transport,  # noqa: SLF001
+        client_id='testapp',
         scope='',
         redirect_uri='urn:ietf:wg:oauth:2.0:oob',
     )
@@ -181,13 +262,15 @@ async def test_authorize_token_public_app(client: AsyncClient):
         grant_type='authorization_code',
         code=authorization_code,
     )
-    assert data['access_token']
-    assert data['token_type'] == 'Bearer'  # noqa: S105
-    assert data['scope'] == ''
-    assert data['created_at']
 
-    r = await auth_client.get('/api/0.6/user/details.json')
+    client.headers.pop('Authorization')
+    # create note
+    r = await client.post(
+        '/api/0.6/notes',
+        params={'lon': 0, 'lat': 0, 'text': test_access_token_in_form.__qualname__},
+        data={'access_token': data['access_token']},
+    )
     assert r.is_success, r.text
-
-    user = r.json()['user']
-    assert user['display_name'] == 'user1'
+    props: dict = XMLToDict.parse(r.content)['osm']['note']
+    comments: list[dict] = props['comments']['comment']
+    assert comments[-1]['user'] == 'user1'

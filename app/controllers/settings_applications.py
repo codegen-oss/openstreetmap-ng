@@ -1,16 +1,20 @@
 from typing import Annotated
+from urllib.parse import urlsplit
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import PositiveInt
 from sqlalchemy.orm import joinedload
 from starlette import status
 from starlette.responses import RedirectResponse
 
+from app.config import API_URL
 from app.lib.auth_context import web_user
 from app.lib.options_context import options_context
 from app.lib.render_response import render_response
 from app.limits import (
     OAUTH_APP_NAME_MAX_LENGTH,
+    OAUTH_PAT_LIMIT,
+    OAUTH_PAT_NAME_MAX_LENGTH,
 )
 from app.models.db.oauth2_application import OAuth2Application
 from app.models.db.oauth2_token import OAuth2Token
@@ -66,5 +70,23 @@ async def application_admin(
         {
             'app': app,
             'OAUTH_APP_NAME_MAX_LENGTH': OAUTH_APP_NAME_MAX_LENGTH,
+        },
+    )
+
+
+@router.get('/settings/applications/tokens')
+async def tokens(
+    user: Annotated[User, web_user()],
+    expand: Annotated[int | None, Query(gt=0)] = None,
+):
+    tokens = await OAuth2TokenQuery.find_many_pats_by_user(user_id=user.id, limit=OAUTH_PAT_LIMIT)
+    return render_response(
+        'settings/applications/tokens.jinja2',
+        {
+            'expand_id': expand,
+            'tokens': tokens,
+            'API_HOST': urlsplit(API_URL).netloc,
+            'API_URL': API_URL,
+            'OAUTH_PAT_NAME_MAX_LENGTH': OAUTH_PAT_NAME_MAX_LENGTH,
         },
     )

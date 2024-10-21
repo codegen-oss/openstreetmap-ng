@@ -10,22 +10,20 @@
                         loading="lazy">
                 </div>
                 <div class="col">
-                    <h6 class="mb-1">
-                        {{ app.name }}
-                    </h6>
+                    <h6 class="mb-1">{{ app.name }}</h6>
                     <p class="form-text mb-0">
                         {% if token %}
                         {% set date %}
-                        {{ format_rfc2822_date(token.authorized_at) }}
+                        <span class="date-emphasis">{{ format_rfc2822_date(token.authorized_at) }}</span>
                         ({{ token.authorized_at | timeago }})
                         {% endset %}
-                        {{ t('settings.authorized_at', date=date) }}
+                        {{ t('settings.authorized_at', date=date) | safe }}
                         {% else %}
                         {% set date %}
-                        {{ format_rfc2822_date(app.created_at) }}
+                        <span class="date-emphasis">{{ format_rfc2822_date(app.created_at) }}</span>
                         ({{ app.created_at | timeago }})
                         {% endset %}
-                        {{ t('settings.created_at', date=date) }}
+                        {{ t('settings.created_at', date=date) | safe }}
                         {% endif %}
                         <br>
 
@@ -43,7 +41,7 @@
                         {% endset %}
                         {% else %}
                         {% set name %}
-                        <a href="/user/permalink/{{ app.user_id }}">
+                        <a href="/user/{{ app.user.display_name }}">
                             <img class="avatar me-1" src="{{ app.user.avatar_url }}"
                                 alt="{{ t('alt.profile_picture') }}" loading="lazy">{#
                             #}{{ app.user.display_name }}{#
@@ -63,7 +61,7 @@
             <div class="row">
                 <div class="col">
 
-                    <h6>{{ t('settings.requested_permissions') }}:</h6>
+                    <h6>{{ t('settings.requested_permissions') }}</h6>
                     <ul class="list-unstyled">
                         {% for scope in app.scopes %}
                         {% set scope = scope.value %}
