@@ -24,5 +24,5 @@ class ElementMember(Base.NoID):
 
     __table_args__ = (
         PrimaryKeyConstraint(sequence_id, order, name='element_member_pkey'),
-        Index('element_member_idx', 'type', id, sequence_id),
+        Index('element_member_idx', type, id, sequence_id),
     )

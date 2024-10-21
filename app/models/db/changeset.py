@@ -58,14 +58,14 @@ class Changeset(Base.Sequential, CreatedAtMixin, UpdatedAtMixin):
     comments: list['ChangesetComment'] | None = None
 
     __table_args__ = (
-        Index('changeset_user_idx', 'user_id', 'id', postgresql_where=user_id != null()),
+        Index('changeset_user_idx', user_id, 'id', postgresql_where=user_id != null()),
         Index('changeset_created_at_idx', 'created_at'),
-        Index('changeset_closed_at_idx', 'closed_at', postgresql_where=closed_at != null()),
+        Index('changeset_closed_at_idx', closed_at, postgresql_where=closed_at != null()),
         Index('changeset_open_idx', 'updated_at', postgresql_where=closed_at == null()),
-        Index('changeset_empty_idx', 'closed_at', postgresql_where=and_(closed_at != null(), size == 0)),
+        Index('changeset_empty_idx', closed_at, postgresql_where=and_(closed_at != null(), size == 0)),
         Index(
             'changeset_union_bounds_idx',
-            'union_bounds',
+            union_bounds,
             postgresql_where=union_bounds != null(),
             postgresql_using='gist',
         ),

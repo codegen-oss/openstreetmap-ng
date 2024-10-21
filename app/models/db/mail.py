@@ -43,4 +43,4 @@ class Mail(Base.ZID, CreatedAtMixin):
         server_default=None,
     )
 
-    __table_args__ = (Index('mail_processing_at_idx', 'processing_at'),)
+    __table_args__ = (Index('mail_processing_at_idx', processing_at),)

@@ -47,12 +47,12 @@ class Element(Base.NoID, CreatedAtMixin):
 
     __table_args__ = (
         PrimaryKeyConstraint(sequence_id, name='element_pkey'),
-        Index('element_changeset_idx', 'changeset_id'),
-        Index('element_version_idx', 'type', id, version),
-        Index('element_current_idx', 'type', id, next_sequence_id, sequence_id),
+        Index('element_changeset_idx', changeset_id),
+        Index('element_version_idx', type, id, version),
+        Index('element_current_idx', type, id, next_sequence_id, sequence_id),
         Index(
             'element_node_point_idx',
-            'point',
+            point,
             postgresql_where=and_(type == 'node', visible == true(), next_sequence_id == null()),
             postgresql_using='gist',
         ),
