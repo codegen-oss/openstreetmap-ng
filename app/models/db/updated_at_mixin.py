@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, MappedAsDataclass, mapped_column
 
 class UpdatedAtMixin(MappedAsDataclass):
     updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True),
+        TIMESTAMP(True),
         init=False,
         nullable=False,
         server_default=func.statement_timestamp(),

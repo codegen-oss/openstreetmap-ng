@@ -33,13 +33,13 @@ class Note(Base.Sequential, CreatedAtMixin, UpdatedAtMixin):
 
     # defaults
     closed_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(timezone=True),
+        TIMESTAMP(True),
         init=False,
         nullable=True,
         server_default=None,
     )
     hidden_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(timezone=True),
+        TIMESTAMP(True),
         init=False,
         nullable=True,
         server_default=None,
