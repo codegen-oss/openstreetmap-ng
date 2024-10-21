@@ -72,8 +72,7 @@ class OAuth2Token(Base.ZID, CreatedAtMixin):
     )
     code_challenge: Mapped[str | None] = mapped_column(Unicode(OAUTH2_CODE_CHALLENGE_MAX_LENGTH), nullable=True)
 
-    # defaults
-    authorized_at: Mapped[datetime | None] = mapped_column(
+TIMESTAMP(timezone=True)    authorized_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(True),
         init=False,
         nullable=True,
