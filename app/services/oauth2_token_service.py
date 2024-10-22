@@ -15,7 +15,11 @@ from app.lib.crypto import hash_bytes
 from app.lib.date_utils import utcnow
 from app.lib.exceptions_context import raise_for
 from app.lib.options_context import options_context
-from app.limits import OAUTH2_SILENT_AUTH_QUERY_SESSION_LIMIT, OAUTH_SECRET_PREVIEW_LENGTH
+from app.limits import (
+    OAUTH_AUTHORIZATION_CODE_TIMEOUT,
+    OAUTH_SECRET_PREVIEW_LENGTH,
+    OAUTH_SILENT_AUTH_QUERY_SESSION_LIMIT,
+)
 from app.models.db.oauth2_application import OAuth2Application
 from app.models.db.oauth2_token import OAuth2CodeChallengeMethod, OAuth2Token, OAuth2TokenOOB
 from app.models.db.user import User
@@ -23,6 +27,7 @@ from app.models.scope import Scope
 from app.models.types import Uri
 from app.queries.oauth2_application_query import OAuth2ApplicationQuery
 from app.queries.oauth2_token_query import OAuth2TokenQuery
+from app.services.system_app_service import SYSTEM_APP_CLIENT_ID_MAP
 
 # TODO: limit number of access tokens per user+app
 
@@ -69,7 +74,7 @@ class OAuth2TokenService:
         redirect_uri = Uri(redirect_uri)  # mark as valid
 
         user_id = auth_user(required=True).id
-        scopes_set = set(scopes)  # TODO: check app scopes
+        scopes_set = set(scopes)
         if not scopes_set.issubset(app.scopes):
             raise_for().oauth_bad_scopes()
 
@@ -78,7 +83,7 @@ class OAuth2TokenService:
             tokens = await OAuth2TokenQuery.find_many_authorized_by_user_app_id(
                 user_id=user_id,
                 app_id=app.id,
-                limit=OAUTH2_SILENT_AUTH_QUERY_SESSION_LIMIT,
+                limit=OAUTH_SILENT_AUTH_QUERY_SESSION_LIMIT,
             )
             for token in tokens:
                 # ignore different redirect uri
@@ -146,6 +151,7 @@ class OAuth2TokenService:
                 select(OAuth2Token)
                 .where(
                     OAuth2Token.token_hashed == authorization_code_hashed,
+                    OAuth2Token.created_at > utcnow() - OAUTH_AUTHORIZATION_CODE_TIMEOUT,
                     OAuth2Token.authorized_at == null(),
                 )
                 .with_for_update()
@@ -202,13 +208,11 @@ class OAuth2TokenService:
 
         Returns the token id.
         """
-        app = await OAuth2ApplicationQuery.find_one_by_client_id('SystemApp.pat')
-        if app is None:
-            raise AssertionError('SystemApp.pat must be initialized')
+        app_id = SYSTEM_APP_CLIENT_ID_MAP['SystemApp.pat']
         async with db_commit() as session:
             token = OAuth2Token(
                 user_id=auth_user(required=True).id,
-                application_id=app.id,
+                application_id=app_id,
                 token_hashed=None,
                 scopes=scopes,
                 redirect_uri=None,
@@ -222,8 +226,9 @@ class OAuth2TokenService:
     @staticmethod
     async def reset_pat_acess_token(pat_id: int) -> SecretStr:
         """
-        Reset the access token and return the new one.
+        Reset the personal access token and return the new secret.
         """
+        app_id = SYSTEM_APP_CLIENT_ID_MAP['SystemApp.pat']
         access_token = buffered_rand_urlsafe(32)
         access_token_hashed = hash_bytes(access_token)
         async with db_commit() as session:
@@ -232,6 +237,7 @@ class OAuth2TokenService:
                 .where(
                     OAuth2Token.id == pat_id,
                     OAuth2Token.user_id == auth_user(required=True).id,
+                    OAuth2Token.application_id == app_id,
                 )
                 .values(
                     {
