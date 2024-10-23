@@ -1,8 +1,8 @@
 from asyncio import TaskGroup
 from typing import Annotated
 
-import cython
 from fastapi import APIRouter, Path, Query
+from pydantic import PositiveInt
 from sqlalchemy.orm import joinedload
 from starlette import status
 from starlette.responses import RedirectResponse
@@ -10,7 +10,7 @@ from starlette.responses import RedirectResponse
 from app.lib.auth_context import auth_user, web_user
 from app.lib.options_context import options_context
 from app.lib.render_response import render_response
-from app.limits import DISPLAY_NAME_MAX_LENGTH, TRACE_TAG_MAX_LENGTH
+from app.limits import DISPLAY_NAME_MAX_LENGTH, TRACE_TAG_MAX_LENGTH, TRACES_LIST_PAGE_SIZE
 from app.models.db.trace_ import Trace
 from app.models.db.user import User
 from app.queries.trace_query import TraceQuery
@@ -21,7 +21,6 @@ from app.utils import json_encodes
 router = APIRouter()
 
 
-@cython.cfunc
 async def _get_traces_data(
     *,
     user: User | None,
@@ -37,7 +36,7 @@ async def _get_traces_data(
             tag=tag,
             after=after,
             before=before,
-            limit=30,
+            limit=TRACES_LIST_PAGE_SIZE,
         )
 
     async def new_after_task():
@@ -102,8 +101,8 @@ async def _get_traces_data(
 
 @router.get('/traces')
 async def index(
-    after: Annotated[int | None, Query(gt=0)] = None,
-    before: Annotated[int | None, Query(gt=0)] = None,
+    after: Annotated[PositiveInt | None, Query()] = None,
+    before: Annotated[PositiveInt | None, Query()] = None,
 ):
     data = await _get_traces_data(user=None, tag=None, after=after, before=before)
     return render_response('traces/index.jinja2', data)
@@ -112,8 +111,8 @@ async def index(
 @router.get('/traces/tag/{tag:str}')
 async def tagged(
     tag: Annotated[str, Path(min_length=1, max_length=TRACE_TAG_MAX_LENGTH)],
-    after: Annotated[int | None, Query(gt=0)] = None,
-    before: Annotated[int | None, Query(gt=0)] = None,
+    after: Annotated[PositiveInt | None, Query()] = None,
+    before: Annotated[PositiveInt | None, Query()] = None,
 ):
     data = await _get_traces_data(user=None, tag=tag, after=after, before=before)
     return render_response('traces/index.jinja2', data)
@@ -122,8 +121,8 @@ async def tagged(
 @router.get('/user/{display_name:str}/traces')
 async def personal(
     display_name: Annotated[str, Path(min_length=1, max_length=DISPLAY_NAME_MAX_LENGTH)],
-    after: Annotated[int | None, Query(gt=0)] = None,
-    before: Annotated[int | None, Query(gt=0)] = None,
+    after: Annotated[PositiveInt | None, Query()] = None,
+    before: Annotated[PositiveInt | None, Query()] = None,
 ):
     user = await UserQuery.find_one_by_display_name(display_name)
     data = await _get_traces_data(user=user, tag=None, after=after, before=before)
@@ -134,8 +133,8 @@ async def personal(
 async def personal_tagged(
     display_name: Annotated[str, Path(min_length=1, max_length=DISPLAY_NAME_MAX_LENGTH)],
     tag: Annotated[str, Path(min_length=1, max_length=TRACE_TAG_MAX_LENGTH)],
-    after: Annotated[int | None, Query(gt=0)] = None,
-    before: Annotated[int | None, Query(gt=0)] = None,
+    after: Annotated[PositiveInt | None, Query()] = None,
+    before: Annotated[PositiveInt | None, Query()] = None,
 ):
     user = await UserQuery.find_one_by_display_name(display_name)
     data = await _get_traces_data(user=user, tag=tag, after=after, before=before)
