@@ -66,11 +66,11 @@ class OAuth2Token(Base.ZID, CreatedAtMixin):
     application: Mapped[OAuth2Application] = relationship(init=False, lazy='raise', innerjoin=True)
     token_hashed: Mapped[bytes | None] = mapped_column(LargeBinary(HASH_SIZE), nullable=True)
     scopes: Mapped[tuple[Scope, ...]] = mapped_column(ARRAY(Enum(Scope), as_tuple=True, dimensions=1), nullable=False)
-    redirect_uri: Mapped[Uri | None] = mapped_column(Unicode(OAUTH_APP_URI_MAX_LENGTH), nullable=True)
+    redirect_uri: Mapped[Uri | None] = mapped_column(String(OAUTH_APP_URI_MAX_LENGTH), nullable=True)
     code_challenge_method: Mapped[OAuth2CodeChallengeMethod | None] = mapped_column(
         Enum(OAuth2CodeChallengeMethod), nullable=True
     )
-    code_challenge: Mapped[str | None] = mapped_column(Unicode(OAUTH_CODE_CHALLENGE_MAX_LENGTH), nullable=True)
+    code_challenge: Mapped[str | None] = mapped_column(String(OAUTH_CODE_CHALLENGE_MAX_LENGTH), nullable=True)
 
     # defaults
     authorized_at: Mapped[datetime | None] = mapped_column(
@@ -82,13 +82,13 @@ class OAuth2Token(Base.ZID, CreatedAtMixin):
 
     # PATs
     name: Mapped[str | None] = mapped_column(
-        Unicode(OAUTH_PAT_NAME_MAX_LENGTH),
+        String(OAUTH_PAT_NAME_MAX_LENGTH),
         init=False,
         nullable=True,
         server_default=None,
     )
     token_preview: Mapped[str | None] = mapped_column(
-        Unicode(OAUTH_SECRET_PREVIEW_LENGTH),
+        String(OAUTH_SECRET_PREVIEW_LENGTH),
         init=False,
         nullable=True,
         server_default=None,
