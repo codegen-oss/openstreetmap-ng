@@ -4,6 +4,8 @@ import { configureStandardForm } from "../_standard-form"
 
 const body = document.querySelector("body.messages-index-body")
 if (body) {
+    const newUnreadMessagesBadge = body.querySelector(".navbar .new-unread-messages-badge")
+    const unreadMessagesBadge = body.querySelector(".navbar .unread-messages-badge")
     const messages = body.querySelectorAll(".messages-list .social-action")
     const messagePreview = body.querySelector(".message-preview")
     const messageSender = messagePreview.querySelector(".message-sender")
@@ -11,10 +13,6 @@ if (body) {
     const senderLink = messageSender.querySelector("a.sender-link")
     const messageTime = messagePreview.querySelector(".message-time")
     const replyLink = messagePreview.querySelector(".reply-link")
-    const unreadButton = messagePreview.querySelector(".unread-button")
-    const unreadForm = messagePreview.querySelector("form.unread-form")
-    const deleteButton = messagePreview.querySelector(".delete-button")
-    const deleteForm = messagePreview.querySelector("form.delete-form")
     const messageTitle = messagePreview.querySelector(".message-title")
     const messageBody = messagePreview.querySelector(".message-body")
     const loadingSpinner = messagePreview.querySelector(".loading")
@@ -36,8 +34,11 @@ if (body) {
         openTarget = target
         openMessageId = newMessageId
         console.debug("openMessagePreview", openMessageId)
+        if (openTarget.classList.contains("unread")) {
+            openTarget.classList.remove("unread")
+            updateUnreadMessagesBadge(-1)
+        }
         openTarget.classList.add("active")
-        openTarget.classList.remove("unread")
         senderAvatar.removeAttribute("src")
         senderLink.innerHTML = ""
         messageTime.innerHTML = ""
@@ -47,7 +48,7 @@ if (body) {
         loadingSpinner.classList.remove("d-none")
 
         // Set show parameter in URL
-        updateUrl(openMessageId)
+        updatePageUrl(openMessageId)
 
         // Update reply link
         replyLink.href = `/message/new?reply=${openMessageId}`
@@ -66,10 +67,10 @@ if (body) {
             .then(async (resp) => {
                 if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`)
                 console.debug("Fetched message", openMessageId)
-                const { sender_display_name, sender_avatar_url, time, subject, body_rich } = await resp.json()
-                senderAvatar.src = sender_avatar_url
-                senderLink.href = `/user/${sender_display_name}`
-                senderLink.textContent = sender_display_name
+                const { user_display_name, user_avatar_url, time, subject, body_rich } = await resp.json()
+                senderAvatar.src = user_avatar_url
+                senderLink.href = `/user/${user_display_name}`
+                senderLink.textContent = user_display_name
                 messageTime.textContent = time
                 messageTitle.textContent = subject
                 messageBody.innerHTML = body_rich
@@ -99,35 +100,55 @@ if (body) {
         openMessageId = null
 
         // Remove show parameter from URL
-        updateUrl(undefined)
+        updatePageUrl(undefined)
     }
 
     /**
-     * Update the URL with the given message id, without reloading the page.
+     * Update the URL with the given message id, without reloading the page
      * @param {number|undefined} messageId Message id
      * @returns {void}
      */
-    const updateUrl = (messageId) => {
+    const updatePageUrl = (messageId) => {
         const searchParams = qsParse(window.location.search.substring(1))
         searchParams.show = messageId
         const url = `${window.location.pathname}?${qsEncode(searchParams)}${window.location.hash}`
         window.history.replaceState(null, "", url)
     }
 
+    /**
+     * Update the unread messages badge in the navbar
+     * @param {number} change Count change
+     * @returns {void}
+     */
+    const updateUnreadMessagesBadge = (change) => {
+        let newCount = Number.parseInt(newUnreadMessagesBadge.textContent.replace(/\D/g, "")) || 0
+        newCount += change
+        console.debug("updateUnreadMessagesBadge", newCount)
+        newUnreadMessagesBadge.textContent = newCount > 0 ? newCount : ""
+        unreadMessagesBadge.textContent = newCount
+    }
+
     // Configure message header buttons
     const closePreviewButton = messagePreview.querySelector(".btn-close")
     closePreviewButton.addEventListener("click", closeMessagePreview)
 
-    unreadButton.addEventListener("click", () => {
-        unreadForm.action = `/api/web/messages/${openMessageId}/unread`
-        unreadForm.requestSubmit()
-    })
-    configureStandardForm(unreadForm, () => {
-        console.debug("onUnreadFormSuccess", openMessageId)
-        openTarget.classList.add("unread")
-        closeMessagePreview()
-    })
+    const unreadButton = messagePreview.querySelector(".unread-button")
+    const unreadForm = messagePreview.querySelector("form.unread-form")
+    if (unreadButton) {
+        unreadButton.addEventListener("click", () => {
+            unreadForm.action = `/api/web/messages/${openMessageId}/unread`
+            unreadForm.requestSubmit()
+        })
+        configureStandardForm(unreadForm, () => {
+            console.debug("onUnreadFormSuccess", openMessageId)
+            openTarget.classList.add("unread")
+            updateUnreadMessagesBadge(1)
+            closeMessagePreview()
+        })
+    }
 
+    const deleteButton = messagePreview.querySelector(".delete-button")
+    const deleteForm = messagePreview.querySelector("form.delete-form")
     deleteButton.addEventListener("click", () => {
         if (!confirm(t("messages.delete_confirmation"))) return
         deleteForm.action = `/api/web/messages/${openMessageId}/delete`
