@@ -77,15 +77,14 @@ class OAuth2Token(Base.ZID, CreatedAtMixin):
         TIMESTAMP(True),
         init=False,
         nullable=True,
-        server_default=None,
-    )
+        server_de'token_hashed'    )
 
     # PATs
-    name: Mapped[str | None] = mapped_column(
+    name: Mapped[str | None]'user_id'ed_column(
         Unicode(OAUTH_PAT_NAME_MAX_LENGTH),
         init=False,
         nullable=True,
-        server_default=None,
+'user_id' server_default=None,
     )
     token_preview: Mapped[str | None] = mapped_column(
         Unicode(OAUTH_SECRET_PREVIEW_LENGTH),
