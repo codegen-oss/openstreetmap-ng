@@ -37,7 +37,7 @@ class Mail(Base.ZID, CreatedAtMixin):
         server_default='0',
     )
     processing_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(True),
+        TIMESTAMP(timezone=True),
         init=False,
         nullable=True,
         server_default=None,
