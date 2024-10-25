@@ -2,7 +2,7 @@
 
 let
   # Update packages with `nixpkgs-update` command
-  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/be79af5ec63facf6c7709094db72b253c34e1ac2.tar.gz") { };
+  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/cabaf14d3e69c9921d7acedf5d7d60bb2b90be02.tar.gz") { };
 
   projectDir = builtins.toString ./.;
   preCommitConf = import ./config/pre-commit-config.nix { inherit pkgs; };
@@ -488,6 +488,7 @@ let
     uv sync --frozen
 
     echo "Installing Bun dependencies"
+    export DO_NOT_TRACK=1
     bun install --frozen-lockfile
 
     echo "Activating Python virtual environment"
@@ -527,8 +528,6 @@ let
     echo "Running [static-img-pipeline]"
     static-img-pipeline &
     wait
-
-    cat yarn.lock
   '' + lib.optionalString (!isDevelopment) ''
     make-version
   '';
