@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from shapely import Point
-from sqlalchemy import ForeignKey, LargeBinary, Unicode, UnicodeText
+from sqlalchemy import ForeignKey, LargeBinary, String, UnicodeText
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.lib.crypto import HASH_SIZE
@@ -24,7 +24,7 @@ class Diary(Base.Sequential, CreatedAtMixin, UpdatedAtMixin, RichTextMixin):
 
     user_id: Mapped[int] = mapped_column(ForeignKey(User.id), nullable=False)
     user: Mapped[User] = relationship(lazy='raise', innerjoin=True)
-    title: Mapped[str] = mapped_column(Unicode(255), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
     body: Mapped[str] = mapped_column(UnicodeText, nullable=False)
     body_rich_hash: Mapped[bytes | None] = mapped_column(
         LargeBinary(HASH_SIZE),
@@ -32,7 +32,7 @@ class Diary(Base.Sequential, CreatedAtMixin, UpdatedAtMixin, RichTextMixin):
         nullable=True,
         server_default=None,
     )
-    language: Mapped[LocaleCode] = mapped_column(Unicode(LOCALE_CODE_MAX_LENGTH), nullable=False)
+    language: Mapped[LocaleCode] = mapped_column(String(LOCALE_CODE_MAX_LENGTH), nullable=False)
     point: Mapped[Point | None] = mapped_column(PointType, nullable=True)
 
     # runtime
