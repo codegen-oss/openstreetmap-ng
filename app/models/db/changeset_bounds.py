@@ -14,6 +14,6 @@ class ChangesetBounds(Base.ZID):
     bounds: Mapped[Polygon] = mapped_column(PolygonType, nullable=False)
 
     __table_args__ = (
-        Index('changeset_bounds_id_idx', changeset_id),
-        Index('changeset_bounds_bounds_idx', bounds, postgresql_using='gist'),
+        Index('changeset_bounds_id_idx', 'changeset_id'),
+        Index('changeset_bounds_bounds_idx', 'bounds', postgresql_using='gist'),
     )
