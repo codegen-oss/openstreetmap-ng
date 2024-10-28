@@ -9,4 +9,4 @@ from app.models.types import EmailType
 class UserTokenEmailChange(UserToken):
     __tablename__ = 'user_token_email_change'
 
-    new_email: Mapped[EmailType] = mapped_column(Unicode(EMAIL_MAX_LENGTH), nullable=False)
+    new_email: Mapped[EmailType] = mapped_column(String(EMAIL_MAX_LENGTH), nullable=False)
