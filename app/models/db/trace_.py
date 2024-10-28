@@ -1,7 +1,7 @@
 from collections.abc import Collection, Container
 from typing import Literal, get_args
 
-from sqlalchemy import ARRAY, ColumnElement, Enum, ForeignKey, Integer, Unicode, true
+from sqlalchemy import ARRAY, ColumnElement, Enum, ForeignKey, Integer, String, true
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
@@ -21,19 +21,19 @@ class Trace(Base.Sequential, CreatedAtMixin, UpdatedAtMixin):
 
     user_id: Mapped[int] = mapped_column(ForeignKey(User.id), nullable=False)
     user: Mapped[User] = relationship(init=False, lazy='raise', innerjoin=True)
-    name: Mapped[str] = mapped_column(Unicode(255), nullable=False)
-    description: Mapped[str] = mapped_column(Unicode(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(String(255), nullable=False)
     visibility: Mapped[TraceVisibility] = mapped_column(
         Enum(*get_args(TraceVisibility), name='trace_visibility'),
         nullable=False,
     )
 
     size: Mapped[int] = mapped_column(Integer, nullable=False)
-    file_id: Mapped[StorageKey] = mapped_column(Unicode(STORAGE_KEY_MAX_LENGTH), init=False, nullable=False)
+    file_id: Mapped[StorageKey] = mapped_column(String(STORAGE_KEY_MAX_LENGTH), init=False, nullable=False)
 
     # defaults
     tags: Mapped[list[str]] = mapped_column(
-        ARRAY(Unicode(TRACE_TAG_MAX_LENGTH), dimensions=1),
+        ARRAY(String(TRACE_TAG_MAX_LENGTH), dimensions=1),
         nullable=False,
         server_default='{}',
     )
