@@ -27,4 +27,4 @@ class ChangesetComment(Base.Sequential, CreatedAtMixin, RichTextMixin):
     # runtime
     body_rich: str | None = None
 
-    __table_args__ = (Index('changeset_comment_idx', changeset_id, 'created_at'),)
+    __table_args__ = (Index('changeset_comment_idx', 'changeset_id', 'created_at'),)
