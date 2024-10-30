@@ -43,9 +43,9 @@
                 {% if header.body_rich %}
                 <p class="pre mb-2">{{ header.body_rich | safe }}</p>
                 {% endif %}
-                <p class="position-relative">
+                <p class="location-btn-container mb-2">
                     {{ t('diary_entries.form.location') }}:
-                    <button class="location-btn btn btn-link p-0 stretched-link">
+                    <button class="location-btn btn btn-link stretched-link">
                         {{ note.point.y }}, {{ note.point.x }}
                     </button>
                 </p>
@@ -102,7 +102,7 @@
                     {{ timeago(comment.created_at, html=True) | safe }}
                 </p>
                 {% if comment.body_rich %}
-                <p class="body pre">{{ comment.body_rich | safe }}</p>
+                <div class="body pre">{{ comment.body_rich | safe }}</div>
                 {% else %}
                 <div class="mb-2"></div>
                 {% endif %}

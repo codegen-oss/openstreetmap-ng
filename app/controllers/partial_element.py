@@ -21,7 +21,6 @@ from app.models.db.changeset import Changeset
 from app.models.db.element import Element
 from app.models.db.user import User
 from app.models.element import ElementId, ElementRef, ElementType, VersionedElementRef
-from app.models.tags_format import TagFormat
 from app.queries.changeset_query import ChangesetQuery
 from app.queries.element_member_query import ElementMemberQuery
 from app.queries.element_query import ElementQuery
@@ -218,12 +217,8 @@ async def _get_element_data(element: Element, at_sequence_id: int, *, include_pa
                 tg.create_task(parents_task())
 
     changeset = changeset_t.result()
-    comment_str = changeset.tags.get('comment')
-    comment_tag = (
-        tags_format({'comment': comment_str})['comment']
-        if (comment_str is not None)
-        else TagFormat('comment', t('browse.no_comment'))
-    )
+    comment_str = changeset.tags.get('comment') or t('browse.no_comment')
+    comment_tag = tags_format({'comment': comment_str})['comment']
 
     prev_version = element.version - 1 if element.version > 1 else None
     next_version = element.version + 1 if (element.next_sequence_id is not None) else None

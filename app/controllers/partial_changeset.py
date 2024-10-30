@@ -14,7 +14,6 @@ from app.limits import CHANGESET_COMMENT_BODY_MAX_LENGTH
 from app.models.db.changeset import Changeset
 from app.models.db.changeset_comment import ChangesetComment
 from app.models.db.user import User
-from app.models.tags_format import TagFormat
 from app.queries.changeset_comment_query import ChangesetCommentQuery
 from app.queries.changeset_query import ChangesetQuery
 from app.queries.element_query import ElementQuery
@@ -73,10 +72,11 @@ async def get_changeset(id: PositiveInt):
     elements = elements_t.result()
     is_subscribed = is_subscribed_task.result() if (is_subscribed_task is not None) else False
 
+    changeset_tags = changeset.tags
+    if not changeset_tags.get('comment'):
+        changeset_tags['comment'] = t('browse.no_comment')
     tags = tags_format(changeset.tags)
-    comment_tag = tags.pop('comment', None)
-    if comment_tag is None:
-        comment_tag = TagFormat('comment', t('browse.no_comment'))
+    comment_tag = tags.pop('comment')
 
     return await render_response(
         'partial/changeset.jinja2',
