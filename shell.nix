@@ -111,7 +111,7 @@ let
       )
       find "''${dirs[@]}" -type f \( -name '*.c' -o -name '*.html' -o -name '*.so' \) -delete
     '')
-    (makeScript "watch-cython" "watchexec --watch app --exts py cython-build")
+    (makeScript "watch-cython" "exec watchexec --watch app --exts py cython-build")
 
     # -- SASS
     (makeScript "sass-pipeline" ''
@@ -126,7 +126,7 @@ let
         --replace \
         --no-map
     '')
-    (makeScript "watch-sass" "watchexec --watch app/static/sass sass-pipeline")
+    (makeScript "watch-sass" "exec watchexec --watch app/static/sass sass-pipeline")
 
     # -- JavaScript
     (makeScript "node" "exec bun \"$@\"")
@@ -192,7 +192,7 @@ let
         done
       fi
     '')
-    (makeScript "watch-js" "watchexec --watch app/static/js --ignore 'bundle-*' js-pipeline")
+    (makeScript "watch-js" "exec watchexec --watch app/static/js --ignore 'bundle-*' js-pipeline")
 
     # -- Static
     (makeScript "static-img-clean" "rm -rf app/static/img/element/_generated")
@@ -256,21 +256,21 @@ let
       locale-download
       locale-pipeline
     '')
-    (makeScript "watch-locale" "watchexec --watch config/locale/extra_en.yaml locale-pipeline")
+    (makeScript "watch-locale" "exec watchexec --watch config/locale/extra_en.yaml locale-pipeline")
 
     # -- Protobuf
     (makeScript "proto-pipeline" ''
-      mkdir -p app/static/js/proto typings/app/models/proto
+      mkdir -p app/static/js/proto
       protoc \
         -I app/models/proto \
         --plugin=node_modules/.bin/protoc-gen-es \
         --es_out app/static/js/proto \
         --es_opt target=ts \
         --python_out app/models/proto \
-        --pyi_out typings/app/models/proto \
+        --pyi_out app/models/proto \
         app/models/proto/*.proto
     '')
-    (makeScript "watch-proto" "watchexec --watch app/models/proto --exts proto proto-pipeline")
+    (makeScript "watch-proto" "exec watchexec --watch app/models/proto --exts proto proto-pipeline")
 
     # -- Supervisor
     (makeScript "dev-start" ''
@@ -442,7 +442,7 @@ let
       python -m coverage erase
       exit $result
     '')
-    (makeScript "watch-tests" "watchexec --watch app --watch tests --exts py run-tests")
+    (makeScript "watch-tests" "exec watchexec --watch app --watch tests --exts py run-tests")
 
     # -- Misc
     (makeScript "run" ''
@@ -488,13 +488,15 @@ let
   shell' = with pkgs; ''
     export PYTHONNOUSERSITE=1
     export TZ=UTC
+    # Automatically remove old files
+    rm -f .python-version
+    rm -r typings/app
 
     current_python=$(readlink -e .venv/bin/python || echo "")
     current_python=''${current_python%/bin/*}
     [ "$current_python" != "${python'}" ] && rm -rf .venv/
 
     echo "Installing Python dependencies"
-    rm -f .python-version
     export UV_COMPILE_BYTECODE=1
     export UV_PYTHON="${python'}/bin/python"
     uv sync --frozen

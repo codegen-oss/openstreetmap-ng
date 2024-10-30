@@ -1,14 +1,16 @@
 export interface OSMNode {
     type: "node"
     id: number
-    geom: [number, number] // lat, lon
+    /** [lat, lon] */
+    geom: [number, number]
     version?: number
 }
 
 export interface OSMWay {
     type: "way"
     id: number
-    geom: [number, number][] // [[lat, lon], ...]
+    /** [[lat, lon], ...] */
+    geom: [number, number][]
     version?: number
     area?: boolean
 }
@@ -21,20 +23,21 @@ export interface OSMRelation {
 
 export interface OSMNote {
     type: "note"
-    id: number
-    lon: number
-    lat: number
+    id?: bigint
+    /** [lat, lon] */
+    geom: [number, number]
     icon: string
     draggable?: boolean
     interactive?: boolean
 }
 
+/** [minLon, minLat, maxLon, maxLat] */
 export type Bounds = [number, number, number, number]
 
 export interface OSMChangeset {
     type: "changeset"
-    id: number
-    bounds: Bounds[] // [[minLon, minLat, maxLon, maxLat], ...]
+    id: bigint
+    bounds: Bounds[]
 }
 
 export type OSMObject = OSMNode | OSMWay | OSMRelation | OSMNote | OSMChangeset
