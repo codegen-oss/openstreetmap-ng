@@ -33,7 +33,6 @@ message RenderObjectsData {
     repeated RenderWay ways = 2;
 }
 
-
 // Shared user configuration
 message WebUserConfig {
     bool activity_tracking = 1;
@@ -95,6 +94,11 @@ message PartialNoteParams {
     uint64 id = 1;
     SharedLonLat point = 2;
     bool open = 3;
+}
+
+// Partial query features response params
+message PartialQueryFeaturesParams {
+    repeated RenderObjectsData renders = 1;
 }
 
 // Partial search response params
