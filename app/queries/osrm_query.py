@@ -6,9 +6,10 @@ import cython
 from fastapi import HTTPException
 from shapely import Point, get_coordinates
 
+from app.config import OSRM_URL
 from app.lib.translation import t
 from app.models.osrm import OSRMResponse, OSRMStep
-from app.models.proto.shared_pb2 import RoutingRoute
+from app.models.proto.shared_pb2 import RoutingResult
 from app.utils import HTTP
 
 OSRMProfile = Literal['car', 'bike', 'foot']
@@ -19,11 +20,11 @@ __all__ = ('OSRMProfiles',)
 
 class OSRMQuery:
     @staticmethod
-    async def route(start: Point, end: Point, *, profile: OSRMProfile) -> RoutingRoute:
+    async def route(start: Point, end: Point, *, profile: OSRMProfile) -> RoutingResult:
         start_x, start_y = get_coordinates(start)[0].tolist()
         end_x, end_y = get_coordinates(end)[0].tolist()
         r = await HTTP.get(
-            f'https://router.project-osrm.org/route/v1/{profile}/{start_x},{start_y};{end_x},{end_y}',
+            f'{OSRM_URL}/route/v1/{profile}/{start_x},{start_y};{end_x},{end_y}',
             params={
                 'steps': 'true',
                 'geometries': 'polyline6',
@@ -40,13 +41,13 @@ class OSRMQuery:
             raise HTTPException(r.status_code, r.text)
 
         leg = cast(OSRMResponse, data)['routes'][0]['legs'][0]
-        routing_steps: list[RoutingRoute.Step] = [None] * len(leg['steps'])  # pyright: ignore[reportAssignmentType]
+        routing_steps: list[RoutingResult.Step] = [None] * len(leg['steps'])  # pyright: ignore[reportAssignmentType]
 
         i: cython.int
         for i, step in enumerate(leg['steps']):
             maneuver = step['maneuver']
             maneuver_id = _get_maneuver_id(maneuver['type'], maneuver.get('modifier', ''))
-            routing_steps[i] = RoutingRoute.Step(
+            routing_steps[i] = RoutingResult.Step(
                 line=step['geometry'],
                 distance=step['distance'],
                 time=step['duration'],
@@ -54,7 +55,7 @@ class OSRMQuery:
                 text=_get_step_text(step, maneuver_id),
             )
 
-        return RoutingRoute(
+        return RoutingResult(
             attribution='<a href="https://routing.openstreetmap.de/about.html" target="_blank">OSRM (FOSSGIS)</a>',
             steps=routing_steps,
         )

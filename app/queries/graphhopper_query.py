@@ -5,10 +5,10 @@ from fastapi import HTTPException
 from polyline_rs import decode_latlon, encode_latlon
 from shapely import Point, get_coordinates
 
-from app.config import GRAPHHOPPER_API_KEY
+from app.config import GRAPHHOPPER_API_KEY, GRAPHHOPPER_URL
 from app.lib.translation import primary_translation_locale
 from app.models.graphhopper import GraphHopperResponse
-from app.models.proto.shared_pb2 import RoutingRoute
+from app.models.proto.shared_pb2 import RoutingResult
 from app.utils import HTTP
 
 GraphHopperProfile = Literal['car', 'bike', 'foot']
@@ -19,11 +19,11 @@ __all__ = ('GraphHopperProfiles',)
 
 class GraphHopperQuery:
     @staticmethod
-    async def route(start: Point, end: Point, *, profile: GraphHopperProfile) -> RoutingRoute:
+    async def route(start: Point, end: Point, *, profile: GraphHopperProfile) -> RoutingResult:
         start_x, start_y = get_coordinates(start)[0].tolist()
         end_x, end_y = get_coordinates(end)[0].tolist()
         r = await HTTP.post(
-            'https://graphhopper.com/api/1/route',
+            f'{GRAPHHOPPER_URL}/api/1/route',
             params={'key': GRAPHHOPPER_API_KEY},
             json={
                 'profile': profile,
@@ -45,12 +45,12 @@ class GraphHopperQuery:
 
         path = cast(GraphHopperResponse, data)['paths'][0]
         points = decode_latlon(path['points'], 5)
-        routing_steps: list[RoutingRoute.Step] = [None] * len(path['instructions'])  # pyright: ignore[reportAssignmentType]
+        routing_steps: list[RoutingResult.Step] = [None] * len(path['instructions'])  # pyright: ignore[reportAssignmentType]
 
         i: cython.int
         for i, instr in enumerate(path['instructions']):
             instr_points = points[instr['interval'][0] : instr['interval'][1] + 1]
-            routing_steps[i] = RoutingRoute.Step(
+            routing_steps[i] = RoutingResult.Step(
                 line=encode_latlon(instr_points, 6),
                 distance=instr['distance'],
                 time=instr['time'] / 1000,
@@ -58,10 +58,10 @@ class GraphHopperQuery:
                 text=instr['text'],
             )
 
-        return RoutingRoute(
+        return RoutingResult(
             attribution='<a href="https://www.graphhopper.com" target="_blank">GraphHopper</a>',
             steps=routing_steps,
-            elevation=RoutingRoute.Elevation(
+            elevation=RoutingResult.Elevation(
                 ascend=path['ascend'],
                 descend=path['descend'],
             ),
