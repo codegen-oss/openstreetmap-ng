@@ -59,6 +59,7 @@ $bootstrap-icons-font-dir: "/static-bootstrap-icons";
 @import "about";
 @import "avatar";
 @import "btn";
+@import "communities";
 @import "content";
 @import "diary";
 @import "dropdown";
@@ -85,6 +86,9 @@ $bootstrap-icons-font-dir: "/static-bootstrap-icons";
 @import "index/routing";
 @import "index/search";
 @import "index/tags";
+
+@import "diaries/compose";
+@import "diaries/index";
 
 @import "leaflet/leaflet";
 @import "leaflet/location-filter";

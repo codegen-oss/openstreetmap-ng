@@ -1,5 +1,6 @@
 import "./_tracking"
 
+import "./_datetime"
 import "./_i18n"
 
 import "./_fixthemap"
@@ -7,6 +8,7 @@ import "./_id"
 import "./_login"
 import "./_rapid"
 import "./_welcome"
+import "./diaries/_compose"
 import { configureMainMap } from "./leaflet/_main-map"
 import "./messages/_index"
 import "./messages/_new"

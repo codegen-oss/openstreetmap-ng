@@ -29,6 +29,9 @@ let
       wrapProgram "$out/bin/python3.13" --prefix ${wrapPrefix} : "${lib.makeLibraryPath pythonLibs}"
     '';
   };
+  watchexec' = makeScript "watchexec" ''
+    exec ${pkgs.watchexec}/bin/watchexec --wrap-process=none "$@"
+  '';
 
   # https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/build-support/trivial-builders/default.nix
   makeScript = with pkgs; name: text:
@@ -53,7 +56,7 @@ let
     coreutils
     findutils
     curl
-    watchexec
+    watchexec'
     brotli
     zstd
     nil
@@ -110,7 +113,7 @@ let
       )
       find "''${dirs[@]}" -type f \( -name '*.c' -o -name '*.html' -o -name '*.so' \) -delete
     '')
-    (makeScript "watch-cython" "exec watchexec --watch app --exts py cython-build")
+    (makeScript "watch-cython" "exec watchexec -o queue -w app --exts py cython-build")
 
     # -- SASS
     (makeScript "sass-pipeline" ''
@@ -127,7 +130,7 @@ let
         --replace \
         --no-map
     '')
-    (makeScript "watch-sass" "exec watchexec --watch app/static/sass sass-pipeline")
+    (makeScript "watch-sass" "exec watchexec -o queue -w app/static/sass sass-pipeline")
 
     # -- JavaScript
     (makeScript "node" "exec bun \"$@\"")
@@ -193,7 +196,7 @@ let
         done
       fi
     '')
-    (makeScript "watch-js" "exec watchexec --watch app/static/js --ignore 'bundle-*' js-pipeline")
+    (makeScript "watch-js" "exec watchexec -o queue -w app/static/js -i 'bundle-*' -i '**/_generated/**' js-pipeline")
 
     # -- Static
     (makeScript "static-img-clean" "rm -rf app/static/img/element/_generated")
@@ -257,7 +260,7 @@ let
       locale-download
       locale-pipeline
     '')
-    (makeScript "watch-locale" "exec watchexec --watch config/locale/extra_en.yaml locale-pipeline")
+    (makeScript "watch-locale" "exec watchexec -o queue -w config/locale/extra_en.yaml locale-pipeline")
 
     # -- Protobuf
     (makeScript "proto-pipeline" ''
@@ -271,7 +274,7 @@ let
         --pyi_out app/models/proto \
         app/models/proto/*.proto
     '')
-    (makeScript "watch-proto" "exec watchexec --watch app/models/proto --exts proto proto-pipeline")
+    (makeScript "watch-proto" "exec watchexec -o queue -w app/models/proto --exts proto proto-pipeline")
 
     # -- Supervisor
     (makeScript "dev-start" ''
@@ -316,7 +319,7 @@ let
     (makeScript "dev-stop" ''
       pid=$(cat data/supervisor/supervisord.pid 2> /dev/null || echo "")
       if [ -n "$pid" ] && grep -q "supervisord" "/proc/$pid/cmdline" 2> /dev/null; then
-        kill -INT "$pid"
+        kill -TERM "$pid"
         echo "Supervisor stopping..."
         while kill -0 "$pid" 2> /dev/null; do sleep 0.1; done
         echo "Supervisor stopped"
@@ -444,7 +447,7 @@ let
       python -m coverage erase
       exit $result
     '')
-    (makeScript "watch-tests" "exec watchexec --watch app --watch tests --exts py run-tests")
+    (makeScript "watch-tests" "exec watchexec -w app -w tests --exts py run-tests")
 
     # -- Misc
     (makeScript "run" ''

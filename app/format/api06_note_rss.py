@@ -1,9 +1,9 @@
 from asyncio import TaskGroup
 from collections.abc import Iterable
 
-from aiohttp.web_exceptions import HTTPException
 from feedgen.entry import FeedEntry
 from feedgen.feed import FeedGenerator
+from httpx import HTTPError
 from shapely import get_coordinates
 
 from app.config import API_URL, APP_URL
@@ -58,17 +58,17 @@ async def _encode_note(fe: FeedEntry, note: Note) -> None:
 
     user = note.comments[0].user
     if user is not None:
-        user_permalink = f'{APP_URL}/user/permalink/{user.id}'
+        user_permalink = f'{APP_URL}/user-id/{user.id}'
         fe.author(name=user.display_name, uri=user_permalink)
         fe.dc.creator(user.display_name)  # pyright: ignore[reportAttributeAccessIssue]
 
     place = f'{y:.5f}, {x:.5f}'
     try:
         # reverse geocode the note point
-        result = await NominatimQuery.reverse(note.point, 14)
+        result = await NominatimQuery.reverse(note.point)
         if result is not None:
             place = result.display_name
-    except (TimeoutError, HTTPException):
+    except HTTPError:
         pass
 
     if len(note.comments) == 1:
@@ -104,17 +104,17 @@ async def _encode_note_comment(fe: FeedEntry, comment: NoteComment) -> None:
 
     user = comment.user
     if user is not None:
-        user_permalink = f'{APP_URL}/user/permalink/{user.id}'
+        user_permalink = f'{APP_URL}/user-id/{user.id}'
         fe.author(name=user.display_name, uri=user_permalink)
         fe.dc.creator(user.display_name)  # pyright: ignore[reportAttributeAccessIssue]
 
     place = f'{y:.5f}, {x:.5f}'
     try:
         # reverse geocode the note point
-        result = await NominatimQuery.reverse(point, 14)
+        result = await NominatimQuery.reverse(point)
         if result is not None:
             place = result.display_name
-    except (TimeoutError, HTTPException):
+    except HTTPError:
         pass
 
     comment_event = comment.event
