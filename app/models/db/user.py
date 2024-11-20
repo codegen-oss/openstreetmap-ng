@@ -79,13 +79,13 @@ class User(Base.Sequential, CreatedAtMixin, RichTextMixin):
 
     # defaults
     scheduled_delete_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(True),
+        TIMESTAMP(timezone=True),
         init=False,
         nullable=True,
         server_default=None,
     )
     password_changed_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(True),
+        TIMESTAMP(timezone=True),
         init=False,
         nullable=True,
         server_default=func.statement_timestamp(),
