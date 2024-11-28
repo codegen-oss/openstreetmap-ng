@@ -2,7 +2,7 @@
 
 let
   # Update packages with `nixpkgs-update` command
-  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/85f7e662eda4fa3a995556527c87b2524b691933.tar.gz") { };
+  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/af51545ec9a44eadf3fe3547610a5cdd882bc34e.tar.gz") { };
 
   projectDir = builtins.toString ./.;
   preCommitConf = import ./config/pre-commit-config.nix { inherit pkgs; };
@@ -99,19 +99,13 @@ let
     (makeScript "cython-build" "python scripts/cython_build.py build_ext --inplace --parallel \"$(nproc --all)\"")
     (makeScript "cython-clean" ''
       rm -rf build/
-      dirs=(
-        app/controllers
-        app/exceptions
-        app/exceptions06
-        app/format
-        app/lib
-        app/middlewares
-        app/responses
-        app/services
-        app/queries
-        app/validators
-      )
-      find "''${dirs[@]}" -type f \( -name '*.c' -o -name '*.html' -o -name '*.so' \) -delete
+      dirs=(app scripts)
+      find "''${dirs[@]}" \
+        -type f \
+        \( -name '*.c' -o -name '*.html' -o -name '*.so' \) \
+        -not \
+        \( -path 'app/static/*' -o -path 'app/templates/*' \) \
+        -delete
     '')
     (makeScript "watch-cython" "exec watchexec -o queue -w app --exts py cython-build")
 
