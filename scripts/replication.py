@@ -14,10 +14,11 @@ import orjson
 import polars as pl
 import uvloop
 from pydantic.dataclasses import dataclass
+from sentry_sdk import set_context, set_tag, start_transaction
 from shapely import Point
 from starlette import status
 
-from app.config import OSM_REPLICATION_URL, REPLICATION_DIR
+from app.config import OSM_REPLICATION_URL, REPLICATION_DIR, SENTRY_REPLICATION_MONITOR
 from app.lib.compressible_geometry import compressible_geometry
 from app.lib.retry import retry
 from app.lib.xmltodict import XMLToDict
@@ -78,11 +79,21 @@ async def main() -> None:
     state = _load_app_state()
     click.echo(f'Resuming replication after {state.frequency}/{state.last_replica.sequence_number}')
     while True:
-        _clean_leftover_data(state)
-        state = await _iterate(state)
-        _bundle_data_if_needed(state)
-        _save_app_state(state)
-        click.echo(f'Finished replication sequence {state.frequency}/{state.last_replica.sequence_number}')
+        with start_transaction(op='task', name='replication'):
+            set_tag('state.frequency', state.frequency)
+            set_context(
+                'state',
+                {
+                    'last_replica_sequence_number': state.last_replica.sequence_number,
+                    'last_replica_created_at': state.last_replica.created_at,
+                    'last_sequence_id': state.last_sequence_id,
+                },
+            )
+            _clean_leftover_data(state)
+            state = await _iterate(state)
+            _bundle_data_if_needed(state)
+            _save_app_state(state)
+            click.echo(f'Finished replication sequence {state.frequency}/{state.last_replica.sequence_number}')
 
 
 @retry(None)
@@ -109,12 +120,13 @@ async def _iterate(state: AppState) -> AppState:
             continue
         r.raise_for_status()
         break
-    df, last_sequence_id = _parse_actions(
-        XMLToDict.parse(gzip.decompress(r.content), size_limit=None)['osmChange'],
-        last_sequence_id=state.last_sequence_id,
-    )
-    df.write_parquet(remote_replica.path, compression='lz4', statistics=False)
-    return replace(state, last_replica=remote_replica, last_sequence_id=last_sequence_id)
+    with SENTRY_REPLICATION_MONITOR:
+        df, last_sequence_id = _parse_actions(
+            XMLToDict.parse(gzip.decompress(r.content), size_limit=None)['osmChange'],
+            last_sequence_id=state.last_sequence_id,
+        )
+        df.write_parquet(remote_replica.path, compression='lz4', statistics=False)
+        return replace(state, last_replica=remote_replica, last_sequence_id=last_sequence_id)
 
 
 @cython.cfunc

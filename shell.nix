@@ -26,9 +26,7 @@ let
     ];
     buildInputs = [ makeWrapper ];
     postBuild = ''
-      wrapProgram "$out/bin/python3.13" \
-        --prefix ${wrapPrefix} : "${lib.makeLibraryPath pythonLibs}" \
-        --unset PYTHONPATH
+      wrapProgram "$out/bin/python3.13" --prefix ${wrapPrefix} : "${lib.makeLibraryPath pythonLibs}"
     '';
   };
   watchexec' = makeScript "watchexec" ''
@@ -481,6 +479,7 @@ let
     '')
     (makeScript "pyright" "bunx pyright")
     (makeScript "feature-icons-popular-update" "python scripts/feature_icons_popular_update.py")
+    (makeScript "replication" "python scripts/replication.py")
     (makeScript "timezone-bbox-update" "python scripts/timezone_bbox_update.py")
     (makeScript "wiki-pages-update" "python scripts/wiki_pages_update.py")
     (makeScript "open-mailpit" "python -m webbrowser http://127.0.0.1:8025")
@@ -509,6 +508,7 @@ let
   shell' = with pkgs; ''
     export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
     export PYTHONNOUSERSITE=1
+    export PYTHONPATH=""
     export TZ=UTC
 
     current_python=$(readlink -e .venv/bin/python || echo "")
