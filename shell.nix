@@ -53,6 +53,7 @@ let
     };
 
   packages' = with pkgs; [
+    ps
     coreutils
     findutils
     curl
@@ -97,6 +98,28 @@ let
 
     # -- Cython
     (makeScript "cython-build" "python scripts/cython_build.py build_ext --inplace --parallel \"$(nproc --all)\"")
+    (makeScript "cython-build-pgo" ''
+      num_compiled=$(find . -type f -name "*.so" -not -path '.*' | wc -l)
+      if [ "$num_compiled" -gt 0 ]; then
+        echo "NOTICE: Found $num_compiled .so files, skipping PGO build"
+        exit 0
+      fi
+      tmpdir=$(mktemp -d)
+      trap 'rm -rf "$tmpdir"' EXIT
+      cython-clean
+      CYTHON_FLAGS="\
+        -fprofile-dir=$tmpdir \
+        -fprofile-generate \
+        -fprofile-update=prefer-atomic" \
+      cython-build
+      run-tests --extended
+      cython-clean
+      CYTHON_FLAGS="\
+        -fprofile-dir=$tmpdir \
+        -fprofile-use \
+        -fprofile-partial-training" \
+      cython-build
+    '')
     (makeScript "cython-clean" ''
       rm -rf build/
       dirs=(app scripts)
@@ -104,7 +127,7 @@ let
         -type f \
         \( -name '*.c' -o -name '*.html' -o -name '*.so' \) \
         -not \
-        \( -path 'app/static/*' -o -path 'app/templates/*' \) \
+        \( -path '.*' -o -path 'app/static/*' -o -path 'app/templates/*' \) \
         -delete
     '')
     (makeScript "watch-cython" "exec watchexec -o queue -w app --exts py cython-build")
@@ -272,8 +295,8 @@ let
 
     # -- Supervisor
     (makeScript "dev-start" ''
-      pid=$(cat data/supervisor/supervisord.pid 2> /dev/null || echo "")
-      if [ -n "$pid" ] && grep -q "supervisord" "/proc/$pid/cmdline" 2> /dev/null; then
+      pid=$(cat data/supervisor/supervisord.pid 2>/dev/null || echo "")
+      if [ -n "$pid" ] && ps -wwp "$pid" -o command= | grep -q "supervisord"; then
         echo "Supervisor is already running"
         exit 0
       fi
@@ -311,8 +334,8 @@ let
       alembic-upgrade
     '')
     (makeScript "dev-stop" ''
-      pid=$(cat data/supervisor/supervisord.pid 2> /dev/null || echo "")
-      if [ -n "$pid" ] && grep -q "supervisord" "/proc/$pid/cmdline" 2> /dev/null; then
+      pid=$(cat data/supervisor/supervisord.pid 2>/dev/null || echo "")
+      if [ -n "$pid" ] && ps -wwp "$pid" -o command= | grep -q "supervisord"; then
         kill -TERM "$pid"
         echo "Supervisor stopping..."
         while kill -0 "$pid" 2> /dev/null; do sleep 0.1; done
@@ -427,6 +450,13 @@ let
 
     # -- Testing
     (makeScript "run-tests" ''
+      pid=$(cat data/supervisor/supervisord.pid 2>/dev/null || echo "")
+      if [ -n "$pid" ] && ps -wwp "$pid" -o command= | grep -q "supervisord"; then true; else
+        echo "NOTICE: Supervisor is not running"
+        echo "NOTICE: Run 'dev-start' before executing tests"
+        exit 1
+      fi
+
       term_output=0
       extended_tests=0
       for arg in "$@"; do
@@ -446,7 +476,7 @@ let
       done
 
       set +e
-      COVERAGE_CORE=sysmon python -m coverage run -m pytest \
+      python -m coverage run -m pytest \
         --verbose \
         --no-header \
         "$([ "$extended_tests" = "1" ] && echo "--extended")"
@@ -498,11 +528,6 @@ let
       if command -v podman &> /dev/null; then docker() { podman "$@"; } fi
       docker push "$(docker load < "$(nix-build --no-out-link)" | sed -n -E 's/Loaded image: (\S+)/\1/p')"
     '')
-    (makeScript "make-version" ''
-      version=$(date --iso-8601=seconds)
-      echo "Setting application version to $version"
-      sed -i -E "s|VERSION = '.*?'|VERSION = '$version'|" app/config.py
-    '')
   ];
 
   shell' = with pkgs; ''
@@ -510,6 +535,7 @@ let
     export PYTHONNOUSERSITE=1
     export PYTHONPATH=""
     export TZ=UTC
+    export COVERAGE_CORE=sysmon
 
     current_python=$(readlink -e .venv/bin/python || echo "")
     current_python=''${current_python%/bin/*}
@@ -570,7 +596,6 @@ let
     static-img-pipeline &
     wait
   '' + lib.optionalString (!isDevelopment) ''
-    make-version
   '';
 in
 pkgs.mkShellNoCC {
