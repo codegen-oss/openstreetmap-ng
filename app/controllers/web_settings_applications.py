@@ -87,9 +87,7 @@ async def settings_application_update(
         scopes=tuple(scopes),
         revoke_all_authorizations=revoke_all_authorizations,
     )
-    feedback = StandardFeedback()
-    feedback.success(None, t('settings.changes_have_been_saved'))
-    return feedback.result
+    return StandardFeedback.success_result(None, t('settings.changes_have_been_saved'))
 
 
 @router.post('/settings/applications/admin/{app_id:int}/avatar')
@@ -139,7 +137,7 @@ async def settings_application_tokens_reset_access_token(
     _: Annotated[User, web_user()],
     app_id: PositiveInt,
 ):
-    access_token = await OAuth2TokenService.reset_pat_acess_token(app_id)
+    access_token = await OAuth2TokenService.reset_pat_access_token(app_id)
     return {'secret': access_token.get_secret_value()}
 
 
