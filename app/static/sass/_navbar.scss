@@ -1,5 +1,4 @@
 .navbar {
-    background: $white;
     z-index: 1005; // leaflet controls are 1000
 
     .edit-link img {
@@ -22,7 +21,7 @@
         }
     }
 
-    @include media-breakpoint-down(md) {
+    @include media-breakpoint-down(lg) {
         .navbar-collapse {
             > :first-child {
                 margin-top: 0.625rem;
@@ -46,6 +45,10 @@
     }
 }
 
+.navbar-color {
+    color: var(--bs-navbar-color);
+}
+
 .navbar-brand {
     display: flex;
     align-items: center;
@@ -61,6 +64,12 @@
 .navbar-nav {
     font-size: 0.9em;
 
+    @include media-breakpoint-down(lg) {
+        .nav-item:not(:last-child) {
+            border-bottom: 1px solid $gray-200;
+        }
+    }
+
     .nav-link {
         padding-left: 0.4em;
         padding-right: 0.4em;
@@ -73,8 +82,6 @@
 
 @include media-breakpoint-down(md) {
     .nav-tabs-md {
-        //border-bottom: unset;
-
         &.nav-tabs .nav-link {
             border-bottom-left-radius: $nav-tabs-border-radius;
             border-bottom-right-radius: $nav-tabs-border-radius;

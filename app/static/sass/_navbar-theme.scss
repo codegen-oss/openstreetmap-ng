@@ -2,8 +2,14 @@
 
 .navbar-theme {
     .dropdown-toggle {
+        border: unset;
+
+        @include media-breakpoint-down(lg) {
+            border: 1px solid $secondary;
+        }
+
         .bi {
-            opacity: 0.5;
+            opacity: 0.85;
         }
     }
 

@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-md">
+<nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
         <a class="navbar-brand fw-semibold" href="/">
             <img src="/static/img/favicon/256.webp" alt="{{ t('alt.logo') }}">
@@ -13,7 +13,7 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
-            <div class="btn-group dropdown d-flex d-md-inline-flex me-auto" role="group">
+            <div class="btn-group dropdown d-flex d-lg-inline-flex me-auto" role="group">
                 <div class="btn-group edit-group flex-grow-1"
                      data-bs-title="{{ t('javascripts.site.edit_disabled_tooltip') }}">
                     {% if user is none %}
@@ -24,7 +24,10 @@
                     <a class="btn btn-outline-green map-link edit-link default" href="/edit?editor={{ _editor }}">
                         {{ t('layouts.edit') }}
                         {% if _editor == 'id' %}
-                            <img src="/static/img/brand/id.webp" alt="{{ t('alt.logo') }}">
+                            <img class="d-only-light" src="/static/img/brand/id-dark.webp" alt="{{ t('alt.logo') }}"
+                                 loading="lazy">
+                            <img class="d-only-dark" src="/static/img/brand/id-light.webp" alt="{{ t('alt.logo') }}"
+                                 loading="lazy">
                         {% elif _editor == 'rapid' %}
                             <img src="/static/img/brand/rapid.webp" alt="{{ t('alt.logo') }}">
                         {% elif _editor == 'remote' %}
@@ -39,7 +42,10 @@
                     <div class="dropdown-menu dropdown-menu-green">
                         <a class="dropdown-item map-link edit-link" data-editor="id" href="/edit?editor=id">
                             {% set _editor %}
-                            <img src="/static/img/brand/id.webp" alt="{{ t('alt.logo') }}" loading="lazy">
+                            <img class="d-only-light" src="/static/img/brand/id-dark.webp" alt="{{ t('alt.logo') }}"
+                                 loading="lazy">
+                            <img class="d-only-dark" src="/static/img/brand/id-light.webp" alt="{{ t('alt.logo') }}"
+                                 loading="lazy">
                             {{ t('editor.id.description') }}
                             {% endset %}
                             {{ t('layouts.edit_with', editor=_editor) | safe }}
@@ -95,14 +101,15 @@
                 ('/help', t('layouts.help'), ''),
                 ('/about', t('layouts.about'), ''),
             ) %}
-            <ul class="navbar-nav d-flex d-md-none d-xl-flex my-2 my-md-0 me-0 me-md-2">
+            <ul class="navbar-nav d-flex d-lg-none d-xxl-flex my-2 my-lg-0">
                 {% for _href, _text, _extra in _links %}
                     <li class="nav-item"><a class="nav-link" href="{{ _href }}" {{ _extra | safe }}>{{ _text }}</a></li>
                 {% endfor %}
             </ul>
 
-            <div class="btn-group d-none d-md-block d-xl-none">
-                <button class="btn btn-link link-dark dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            <div class="btn-group d-none d-lg-block d-xxl-none">
+                <button class="btn btn-light btn-bg-initial navbar-color border-0 dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown"
                         aria-expanded="false">
                     {{ t('layouts.more') }}
                 </button>
@@ -116,7 +123,7 @@
             {% include '_navbar_theme.jinja2' %}
 
             {% if user is not none %}
-                <div class="dropdown d-flex d-md-inline-flex">
+                <div class="dropdown d-flex d-lg-inline-flex">
                     <button
                         class="profile-btn btn btn-light btn-bg-initial border dropdown-toggle d-flex align-items-center flex-grow-1"
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -170,7 +177,7 @@
                     </ul>
                 </div>
             {% else %}
-                <div class="btn-group d-flex d-md-inline-flex" role="group">
+                <div class="btn-group d-flex d-lg-inline-flex" role="group">
                     <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
                             data-bs-target="#loginModal">
                         {{ t('login.sign_in') }}
